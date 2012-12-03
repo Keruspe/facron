@@ -97,7 +97,7 @@ to_FacronChar (char c)
 
 static const char symbols[ERROR][NB_CHARS] =
 {
-          /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |, \ , ... */
+          /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |,   , ... */
     [_0] = { __, __, __, __, __, F0, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, _0, __ },
     /* FAN_ */
     [F0] = { F1, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __ },
@@ -320,7 +320,7 @@ load_conf (void)
 void
 unload_conf (FacronConfEntry *conf)
 {
-    while (conf != NULL)
+    while (conf)
     {
         free (conf-> path);
         FacronConfEntry *old = conf;

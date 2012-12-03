@@ -31,13 +31,25 @@
 #include <linux/fanotify.h>
 #include <linux/limits.h>
 
-/* TODO: apply/unapply conf */
+static void
+walk_conf (int fanotify_fd, FacronConfEntry *conf, int flag)
+{
+    while (conf)
+    {
+        fanotify_mark (fanotify_fd, flag, conf->mask, AT_FDCWD, conf->path);
+        conf = conf->next;
+    }
+}
+
+#define APPLY_CONF walk_conf (fanotify_fd, conf, FAN_MARK_ADD);
+#define UNAPPLY_CONF walk_conf (fanotify_fd, conf, FAN_MARK_REMOVE);
+#define REAPPLY_CONF UNAPPLY_CONF APPLY_CONF
 
 int
 main (void)
 {
     int ret = EXIT_FAILURE;
-    int fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY | O_LARGEFILE);
+    int fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE);
 
     /* TODO: sigterm */
 
@@ -55,6 +67,8 @@ main (void)
         fprintf (stderr, "Failed to load configuration file, do \"/etc/facron.conf\" exist?\n");
         goto fail;
     }
+
+    APPLY_CONF
 
     char buf[4096];
     size_t len;
@@ -84,7 +98,10 @@ main (void)
             printf ("%s\n", path);
 
             if (!strcmp (path, "/etc/facron.conf"))
+            {
                 conf = reload_conf (conf);
+                REAPPLY_CONF
+            }
 
 next:
             close (metadata->fd);
@@ -95,6 +112,7 @@ next:
 
 fail:
     fanotify_mark (fanotify_fd, FAN_MARK_REMOVE, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
+    UNAPPLY_CONF
     unload_conf (conf);
     close (fanotify_fd);
 
