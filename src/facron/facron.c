@@ -345,6 +345,14 @@ typedef struct
     unsigned long mask;
 } FacronEntry;
 
+typedef struct FacronConf FacronConf;
+
+struct FacronConf
+{
+    FacronEntry this;
+    FacronConf *next;
+};
+
 typedef struct fanotify_event_metadata FacronMetadata;
 
 static bool
@@ -446,35 +454,49 @@ read_next (FacronEntry *entry, FILE *conf)
 }
 
 static bool
-watch_next (int fanotify_fd, FILE *conf)
+watch_next (int fanotify_fd, FacronConf **conf, FILE *conf_file)
 {
     FacronEntry entry;
-    if (!read_next (&entry, conf))
+    if (!read_next (&entry, conf_file))
         return false;
 
     if (!entry.path)
         return true; /* erroneous line, ignore it */
 
-    /* TODO: FAN_MARK_REMOVE */
-    int ret = !fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
+    FacronConf *conf_entry = (FacronConf *) malloc (sizeof (FacronConf));
+    conf_entry->this = entry;
+    conf_entry->next = *conf;
+    *conf = conf_entry;
 
-    free (entry.path);
-
-    return ret;
+    return !fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
 }
 
 static bool
-load_conf (int fanotify_fd)
+load_conf (int fanotify_fd, FacronConf **conf)
 {
-    FILE *conf = fopen ("/etc/facron.conf", "r");
+    FILE *conf_file = fopen ("/etc/facron.conf", "r");
 
-    if (!conf)
+    if (!conf_file)
         return false;
 
-    while (watch_next (fanotify_fd, conf));
+    while (watch_next (fanotify_fd, conf, conf_file));
 
-    fclose (conf);
+    fclose (conf_file);
     return true;
+}
+
+static void
+unload_conf (int fanotify_fd, FacronConf *conf)
+{
+    while (conf != NULL)
+    {
+        FacronEntry *entry = &conf->this;
+        fanotify_mark (fanotify_fd, FAN_MARK_REMOVE, entry->mask, AT_FDCWD, entry->path);
+        free (entry-> path);
+        FacronConf *old = conf;
+        conf = conf -> next;
+        free (old);
+    }
 }
 
 int
@@ -483,13 +505,17 @@ main (void)
     int ret = EXIT_FAILURE;
     int fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY | O_LARGEFILE);
 
+    /* TODO: sigterm */
+
     if (fanotify_fd < 0)
     {
         fprintf (stderr, "Could not initialize fanotify\n");
         return EXIT_FAILURE;
     }
 
-    if (!load_conf (fanotify_fd))
+    FacronConf *conf = NULL;
+
+    if (!load_conf (fanotify_fd, &conf))
     {
         fprintf (stderr, "Failed to load configuration file, do \"/etc/facron.conf\" exist?\n");
         goto fail;
@@ -529,6 +555,7 @@ next:
     ret = EXIT_SUCCESS;
 
 fail:
+    unload_conf (fanotify_fd, conf);
     close (fanotify_fd);
 
     return ret;
