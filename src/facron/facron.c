@@ -477,9 +477,7 @@ main (void)
         char path[PATH_MAX];
         int path_len;
 
-        FacronMetadata *metadata = (FacronMetadata *) buf;
-
-        while (FAN_EVENT_OK (metadata, len))
+        for (FacronMetadata *metadata = (FacronMetadata *) buf; FAN_EVENT_OK (metadata, len); metadata = FAN_EVENT_NEXT (metadata, len))
         {
             if (metadata->vers < 2)
             {
