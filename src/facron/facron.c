@@ -499,6 +499,14 @@ unload_conf (int fanotify_fd, FacronConf *conf)
     }
 }
 
+static bool
+reload_conf (int fanotify_fd, FacronConf **conf)
+{
+    unload_conf (fanotify_fd, *conf);
+    *conf = NULL;
+    return load_conf (fanotify_fd, conf);
+}
+
 int
 main (void)
 {
