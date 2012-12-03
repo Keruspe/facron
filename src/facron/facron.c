@@ -30,6 +30,34 @@
 #include <linux/fanotify.h>
 #include <linux/limits.h>
 
+typedef enum
+{
+    EMPTY,
+    F,
+    FA,
+    FAN,
+    FAN_,
+    FAN_T,
+    FAN_TE,
+    FAN_TES,
+    FAN_TEST,
+    ERROR,
+    __ = ERROR
+} FacronToken;
+
+static const char syms[FAN_TEST]['z' - 'a' + 2] =
+{
+                /* a,  b,  c,  d,      e,  f,  g,  h,  i,  j,  k,  l,  m,   n,  o,  p,  q,  r,       s,        t,  u,  v,  w,  x,  y,  z,    _, other */
+    [EMPTY]   = { __, __, __, __,     __,  F, __, __, __, __, __, __, __,  __, __, __, __, __,      __,       __, __, __, __, __, __, __,   __, __ },
+    [F]       = { FA, __, __, __,     __, __, __, __, __, __, __, __, __,  __, __, __, __, __,      __,       __, __, __, __, __, __, __,   __, __ },
+    [FA]      = { __, __, __, __,     __, __, __, __, __, __, __, __, __, FAN, __, __, __, __,      __,       __, __, __, __, __, __, __,   __, __ },
+    [FAN]     = { __, __, __, __,     __, __, __, __, __, __, __, __, __,  __, __, __, __, __,      __,       __, __, __, __, __, __, __, FAN_, __ },
+    [FAN_]    = { __, __, __, __,     __, __, __, __, __, __, __, __, __,  __, __, __, __, __,      __,    FAN_T, __, __, __, __, __, __,   __, __ },
+    [FAN_T]   = { __, __, __, __, FAN_TE, __, __, __, __, __, __, __, __,  __, __, __, __, __,      __,       __, __, __, __, __, __, __,   __, __ },
+    [FAN_TE]  = { __, __, __, __,     __, __, __, __, __, __, __, __, __,  __, __, __, __, __, FAN_TES,       __, __, __, __, __, __, __,   __, __ },
+    [FAN_TES] = { __, __, __, __,     __, __, __, __, __, __, __, __, __,  __, __, __, __, __,      __, FAN_TEST, __, __, __, __, __, __,   __, __ }
+};
+
 typedef struct
 {
     char *path;
@@ -38,26 +66,95 @@ typedef struct
 
 typedef struct fanotify_event_metadata FacronMetadata;
 
-static const char *
-read_next (FacronEntry *entry)
+static bool
+is_space (char c)
 {
-    /* TODO */
-    entry->path = NULL;
-    entry->mask = 0;
+    return (c == ' ' || c == '\t');
+}
 
-    return entry->path;
+static int
+to_val (char c)
+{
+    if (c == '_')
+        return 'z' - 'a' + 1;
+    if (c >= 'A' && c <= 'Z')
+        c += ('a' -  'A');
+    if (c >= 'a' && c <= 'z')
+        return c - 'a';
+    return 'z' - 'a' + 2;
 }
 
 static bool
-watch_next (int fanotify_fd)
+read_next (FacronEntry *entry, FILE *conf)
+{
+    entry->path = NULL;
+    entry->mask = 0;
+
+    size_t len;
+    if (getline (&entry->path, &len, conf) < 1)
+        return false;
+    char *line = entry->path;
+
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (is_space (line[i]))
+        {
+            line[i] = '\0';
+            line += i + 1;
+            len -= (i + 1);
+            printf ("path to monitor: \"%s\"\n", entry->path);
+            break;
+        }
+    }
+
+    while (is_space (line[0]))
+    {
+        ++line;
+        --len;
+    }
+
+    FacronToken token = EMPTY;
+
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (line[i] == '\n')
+            break;
+        token = syms[token][to_val (line[i])];
+        switch (token)
+        {
+        case FAN_TEST:
+            printf ("Found FAN_TEST !\n");
+            break;
+        case ERROR:
+            fprintf (stderr, "Error: \"%s\" not understood\n", line);
+            return false;
+        default:
+            break;
+        }
+    }
+
+    return true;
+}
+
+static bool
+watch_next (int fanotify_fd, FILE *conf)
 {
     FacronEntry entry;
-    read_next (&entry);
-    if (!read_next (&entry))
+    if (!read_next (&entry, conf))
         return false;
 
     /* TODO: FAN_MARK_REMOVE */
     return fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
+}
+
+static void
+load_conf (int fanotify_fd)
+{
+    FILE *conf = fopen ("/etc/facron.conf", "r");
+
+    while (watch_next (fanotify_fd, conf));
+
+    fclose (conf);
 }
 
 int
@@ -71,7 +168,7 @@ main (void)
         return -1;
     }
 
-    while (watch_next (fanotify_fd));
+    load_conf (fanotify_fd);
 
     char buf[4096];
     size_t len;
