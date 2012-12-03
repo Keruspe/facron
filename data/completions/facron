@@ -1,0 +1,16 @@
+_facron()
+{
+    COMPREPLY=()
+
+    if [[ $COMP_CWORD == 1 ]]; then
+
+        local cur opts
+
+        cur="${COMP_WORDS[$COMP_CWORD]}"
+        opts=""
+        COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
+
+    fi
+}
+
+complete -F _facron facron

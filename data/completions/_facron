@@ -1,0 +1,12 @@
+#compdef facron
+
+if (( CURRENT == 2 )); then
+
+    local commands
+
+    commands=(
+    )
+
+    _describe -t commands command commands
+
+fi
