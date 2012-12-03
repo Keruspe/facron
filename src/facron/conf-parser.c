@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <linux/fanotify.h>
@@ -247,12 +248,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
         return read_next (previous, conf);
     }
 
-
-    FacronConfEntry *entry = (FacronConfEntry *) malloc (sizeof (FacronConfEntry));
-    entry->path = line;
-    entry->mask = 0;
-    entry->next = previous;
-
+    char *line_beg = line;
     for (size_t i = 1; i < len; ++i)
     {
         if (is_space (line[i], false))
@@ -264,9 +260,15 @@ read_next (FacronConfEntry *previous, FILE *conf)
         }
     }
 
+    FacronConfEntry *entry = (FacronConfEntry *) malloc (sizeof (FacronConfEntry));
+    entry->path = strdup (line_beg);
+    entry->mask = 0;
+    entry->next = previous;
+
     if (access (entry->path, R_OK))
     {
         fprintf (stderr, "warning: No such file or directory: \"%s\"\n", entry->path);
+        free (line_beg);
         free (entry->path);
         free (entry);
         return read_next (previous, conf);
@@ -282,18 +284,21 @@ read_next (FacronConfEntry *previous, FILE *conf)
         {
         case ERROR:
             fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line);
+            free (line_beg);
             free (entry->path);
             free (entry);
             return read_next (previous, conf);
         case EMPTY:
             entry->mask |= FacronToken_to_mask (prev_token);
             if (c == SPACE && entry->mask != 0)
-                return entry;
+                goto end;
         default:
             break;
         }
     }
 
+end:
+    free (line_beg);
     return entry;
 }
 
