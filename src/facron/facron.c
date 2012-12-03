@@ -399,7 +399,10 @@ read_next (FacronEntry *entry, FILE *conf)
         return false;
     char *line = entry->path;
 
-    for (size_t i = 0; i < len; ++i)
+    if (line[0] == '\r' || line[0] == '\n' || is_space (line[0]))
+        return true;
+
+    for (size_t i = 1; i < len; ++i)
     {
         if (is_space (line[i]))
         {
@@ -409,6 +412,13 @@ read_next (FacronEntry *entry, FILE *conf)
             printf ("path to monitor: \"%s\"\n", entry->path);
             break;
         }
+    }
+
+    if (access (entry->path, R_OK))
+    {
+        fprintf (stderr, "warning: No such file or directory: \"%s\"", entry->path);
+        free (entry->path);
+        return false;
     }
 
     FacronToken token = EMPTY;
@@ -443,7 +453,11 @@ watch_next (int fanotify_fd, FILE *conf)
         return false;
 
     /* TODO: FAN_MARK_REMOVE */
-    return fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
+    int ret = fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
+
+    free (entry.path);
+
+    return ret;
 }
 
 static bool
