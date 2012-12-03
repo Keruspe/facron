@@ -194,9 +194,7 @@ static const char symbols[ERROR][NB_CHARS] =
 static inline bool
 is_space (char c, bool allow_newline)
 {
-    if (c == ' ' || c == '\t' || !allow_newline)
-        return true;
-    return (c == '\n' || c == '\r');
+    return (c == ' ' || c == '\t' || (allow_newline && (c == '\n' || c == '\r')));
 }
 
 static unsigned long long
@@ -254,7 +252,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
         if (is_space (line[i], false))
         {
             line[i] = '\0';
-            line += i + 1;
+            line += (i + 1);
             len -= (i + 1);
             break;
         }

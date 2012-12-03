@@ -38,8 +38,8 @@ static FacronConfEntry *_conf = NULL;
 static void
 walk_conf (int flag)
 {
-    for (FacronConfEntry *conf = _conf; conf; conf = conf->next)
-        fanotify_mark (fanotify_fd, flag, conf->mask, AT_FDCWD, conf->path);
+    for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
+        fanotify_mark (fanotify_fd, flag, entry->mask, AT_FDCWD, entry->path);
 }
 
 #define APPLY_CONF walk_conf (FAN_MARK_ADD);
@@ -60,6 +60,7 @@ signal_handler (int signum)
 {
     printf ("Signal %d received, exiting.\n", signum);
     cleanup ();
+    exit (signum);
 }
 
 int
