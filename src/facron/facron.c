@@ -446,28 +446,37 @@ watch_next (int fanotify_fd, FILE *conf)
     return fanotify_mark (fanotify_fd, FAN_MARK_ADD, entry.mask, AT_FDCWD, entry.path);
 }
 
-static void
+static bool
 load_conf (int fanotify_fd)
 {
     FILE *conf = fopen ("/etc/facron.conf", "r");
 
+    if (!conf)
+        return false;
+
     while (watch_next (fanotify_fd, conf));
 
     fclose (conf);
+    return true;
 }
 
 int
 main (void)
 {
+    int ret = EXIT_FAILURE;
     int fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY | O_LARGEFILE);
 
     if (fanotify_fd < 0)
     {
         fprintf (stderr, "Could not initialize fanotify\n");
-        return -1;
+        return EXIT_FAILURE;
     }
 
-    load_conf (fanotify_fd);
+    if (!load_conf (fanotify_fd))
+    {
+        fprintf (stderr, "Failed to load configuration file, do \"/etc/facron.conf\" exist?\n");
+        goto fail;
+    }
 
     char buf[4096];
     size_t len;
@@ -500,8 +509,10 @@ next:
         }
     }
 
+    ret = EXIT_SUCCESS;
+
 fail:
     close (fanotify_fd);
 
-    return 0;
+    return ret;
 }
