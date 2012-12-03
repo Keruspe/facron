@@ -21,6 +21,7 @@
 #include "conf-parser.h"
 
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,29 +32,45 @@
 #include <linux/fanotify.h>
 #include <linux/limits.h>
 
+static int fanotify_fd;
+static FacronConfEntry *_conf = NULL;
+
 static void
-walk_conf (int fanotify_fd, FacronConfEntry *conf, int flag)
+walk_conf (int flag)
 {
-    while (conf)
-    {
+    for (FacronConfEntry *conf = _conf; conf; conf = conf->next)
         fanotify_mark (fanotify_fd, flag, conf->mask, AT_FDCWD, conf->path);
-        conf = conf->next;
-    }
 }
 
-#define APPLY_CONF walk_conf (fanotify_fd, conf, FAN_MARK_ADD);
-#define UNAPPLY_CONF walk_conf (fanotify_fd, conf, FAN_MARK_REMOVE);
+#define APPLY_CONF walk_conf (FAN_MARK_ADD);
+#define UNAPPLY_CONF walk_conf (FAN_MARK_REMOVE);
 #define REAPPLY_CONF UNAPPLY_CONF APPLY_CONF
+
+static void
+cleanup (void)
+{
+    fanotify_mark (fanotify_fd, FAN_MARK_REMOVE, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
+    UNAPPLY_CONF
+    unload_conf (_conf);
+    close (fanotify_fd);
+}
+
+static void
+signal_handler (int signum)
+{
+    printf ("Signal %d received, exiting.\n", signum);
+    cleanup ();
+}
 
 int
 main (void)
 {
     int ret = EXIT_FAILURE;
-    int fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE);
 
-    /* TODO: sigterm */
+    signal (SIGTERM, &signal_handler);
+    signal (SIGINT, &signal_handler);
 
-    if (fanotify_fd < 0)
+    if ((fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE)) < 0)
     {
         fprintf (stderr, "Could not initialize fanotify\n");
         return EXIT_FAILURE;
@@ -61,8 +78,7 @@ main (void)
 
     fanotify_mark (fanotify_fd, FAN_MARK_ADD, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
 
-    FacronConfEntry *conf = load_conf ();
-    if (!conf)
+    if (!(_conf = load_conf ()))
     {
         fprintf (stderr, "Failed to load configuration file, do \"/etc/facron.conf\" exist?\n");
         goto fail;
@@ -99,7 +115,7 @@ main (void)
 
             if (!strcmp (path, "/etc/facron.conf"))
             {
-                conf = reload_conf (conf);
+                _conf = reload_conf (_conf);
                 REAPPLY_CONF
             }
 
@@ -111,10 +127,7 @@ next:
     ret = EXIT_SUCCESS;
 
 fail:
-    fanotify_mark (fanotify_fd, FAN_MARK_REMOVE, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
-    UNAPPLY_CONF
-    unload_conf (conf);
-    close (fanotify_fd);
+    cleanup ();
 
     return ret;
 }
