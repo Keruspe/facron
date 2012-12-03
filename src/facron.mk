@@ -21,6 +21,8 @@ bin_PROGRAMS += \
 
 bin_facron_SOURCES = \
 	src/facron/facron.c \
+	src/facron/conf-parser.h \
+	src/facron/conf-parser.c \
 	$(NULL)
 
 bin_facron_CFLAGS = \
