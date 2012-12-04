@@ -273,10 +273,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
     if (access (entry->path, R_OK))
     {
         fprintf (stderr, "warning: No such file or directory: \"%s\"\n", entry->path);
-        free (line_beg);
-        free (entry->path);
-        free (entry);
-        return read_next (previous, conf);
+        goto fail;
     }
 
     FacronToken token = EMPTY;
@@ -299,11 +296,8 @@ read_next (FacronConfEntry *previous, FILE *conf)
             {
                 if (!entry->mask)
                 {
-                    fprintf (stderr, "Error: No Fanotify mask has been specified.\n");
-                    free (line_beg);
-                    free (entry->path);
-                    free (entry);
-                    return read_next (previous, conf);
+                    fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
+                    goto fail;
                 }
                 line += (i + 1);
                 len -= (i + 1);
@@ -318,7 +312,7 @@ end:;
     int n = 0;
     for (ssize_t i = 0; len > 0 && n < 511; ++n, i = 0)
     {
-        while (is_space (line[0], false) && len > 0)
+        while (is_space (line[0], false) && i < len)
         {
             ++line;
             --len;
@@ -326,15 +320,32 @@ end:;
 
         while (i < len && !is_space (line[i], true))
             ++i;
+
+        if (i == len)
+            break;
+
         line[i] = '\0';
         entry->command[n] = strdup (line);
         line += (i + 1);
         len -= (i + 1);
     }
+
+    if (n == 0)
+    {
+        fprintf (stderr, "Error: no command line specified for \"%s\"\n", entry->path);
+        goto fail;
+    }
+
     entry->command[n] = NULL;
 
     free (line_beg);
     return entry;
+
+fail:
+    free (line_beg);
+    free (entry->path);
+    free (entry);
+    return read_next (previous, conf);
 }
 
 FacronConfEntry *
