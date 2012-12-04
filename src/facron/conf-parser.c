@@ -380,7 +380,7 @@ end:;
             break;
 
         line[i] = '\0';
-        entry->command[n] = strdup (line);
+        entry->command[n] = (strcmp (line, "$$")) ? strdup (line) : strdup (entry->path);
         line += (i + 1);
         len -= (i + 1);
     }
