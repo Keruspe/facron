@@ -55,6 +55,7 @@ walk_conf (FacronAction action)
         break;
     default:
         flag = FAN_MARK_REMOVE;
+        break;
     }
 
 
