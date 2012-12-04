@@ -235,9 +235,10 @@ FacronToken_to_mask (FacronToken t)
 static FacronConfEntry *
 read_next (FacronConfEntry *previous, FILE *conf)
 {
-    size_t len;
+    size_t dummy_len = 0;
+    ssize_t len;
     char *line = NULL;
-    if (getline (&line, &len, conf) < 1)
+    if ((len = getline (&line, &dummy_len, conf)) < 1)
         return NULL;
 
     if (is_space (line[0], true))
@@ -247,7 +248,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
     }
 
     char *line_beg = line;
-    for (size_t i = 1; i < len; ++i)
+    for (ssize_t i = 1; i < len; ++i)
     {
         if (is_space (line[i], false))
         {
@@ -256,6 +257,12 @@ read_next (FacronConfEntry *previous, FILE *conf)
             len -= (i + 1);
             break;
         }
+    }
+
+    while (is_space (line[0], false))
+    {
+        ++line;
+        --len;
     }
 
     FacronConfEntry *entry = (FacronConfEntry *) malloc (sizeof (FacronConfEntry));
@@ -273,7 +280,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
     }
 
     FacronToken token = EMPTY;
-    for (size_t i = 0; i < len; ++i)
+    for (ssize_t i = 0; i < len; ++i)
     {
         FacronToken prev_token = token;
         FacronChar c = to_FacronChar (line[i]);
@@ -288,14 +295,44 @@ read_next (FacronConfEntry *previous, FILE *conf)
             return read_next (previous, conf);
         case EMPTY:
             entry->mask |= FacronToken_to_mask (prev_token);
-            if (c == SPACE && entry->mask != 0)
+            if (c == SPACE)
+            {
+                if (!entry->mask)
+                {
+                    fprintf (stderr, "Error: No Fanotify mask has been specified.\n");
+                    free (line_beg);
+                    free (entry->path);
+                    free (entry);
+                    return read_next (previous, conf);
+                }
+                line += (i + 1);
+                len -= (i + 1);
                 goto end;
+            }
         default:
             break;
         }
     }
 
-end:
+end:;
+    int n = 0;
+    for (ssize_t i = 0; len > 0 && n < 511; ++n, i = 0)
+    {
+        while (is_space (line[0], false) && len > 0)
+        {
+            ++line;
+            --len;
+        }
+
+        while (i < len && !is_space (line[i], true))
+            ++i;
+        line[i] = '\0';
+        entry->command[n] = strdup (line);
+        line += (i + 1);
+        len -= (i + 1);
+    }
+    entry->command[n] = NULL;
+
     free (line_beg);
     return entry;
 }
@@ -321,6 +358,8 @@ unload_conf (FacronConfEntry *conf)
     while (conf)
     {
         free (conf-> path);
+        for (int i = 0; i < 512 && conf->command[i]; ++i)
+            free (conf->command[i]);
         FacronConfEntry *old = conf;
         conf = conf->next;
         free (old);

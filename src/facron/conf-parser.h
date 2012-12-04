@@ -171,6 +171,7 @@ struct FacronConfEntry
 {
     char *path;
     unsigned long long mask;
+    char *command[512];
     FacronConfEntry *next;
 };
 
