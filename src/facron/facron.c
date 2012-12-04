@@ -58,16 +58,20 @@ cleanup (void)
 static void
 signal_handler (int signum)
 {
-    printf ("Signal %d received, exiting.\n", signum);
-    cleanup ();
-    exit (signum);
+    switch (signum)
+    {
+    case SIGTERM:
+        signum = EXIT_SUCCESS;
+    default:
+        printf ("Signal %d received, exiting.\n", signum);
+        cleanup ();
+        exit (signum);
+    }
 }
 
 int
 main (void)
 {
-    int ret = EXIT_FAILURE;
-
     signal (SIGTERM, &signal_handler);
     signal (SIGINT, &signal_handler);
 
@@ -125,10 +129,8 @@ next:
         }
     }
 
-    ret = EXIT_SUCCESS;
-
 fail:
     cleanup ();
 
-    return ret;
+    return EXIT_FAILURE;
 }
