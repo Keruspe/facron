@@ -373,6 +373,7 @@ end:;
             --len;
         }
 
+        /* TODO: handle "foo bar" */
         while (i < len && !is_space (line[i], true))
             ++i;
 
