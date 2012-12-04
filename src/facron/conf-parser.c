@@ -241,16 +241,13 @@ read_next (FacronConfEntry *previous, FILE *conf)
     if ((len = getline (&line, &dummy_len, conf)) < 1)
         return NULL;
 
-    if (is_space (line[0], true))
-    {
-        free (line);
-        return read_next (previous, conf);
-    }
-
     char *line_beg = line;
+    if (is_space (line[0], true))
+        goto fail_early;
+
     for (ssize_t i = 1; i < len; ++i)
     {
-        if (is_space (line[i], false))
+        if (is_space (line[i], true))
         {
             line[i] = '\0';
             line += (i + 1);
@@ -259,22 +256,28 @@ read_next (FacronConfEntry *previous, FILE *conf)
         }
     }
 
+    if (access (line_beg, R_OK))
+    {
+        fprintf (stderr, "warning: No such file or directory: \"%s\"\n", line_beg);
+        goto fail_early;
+    }
+
     while (is_space (line[0], false))
     {
         ++line;
         --len;
     }
 
+    if (0 == len)
+    {
+        fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
+        goto fail_early;
+    }
+
     FacronConfEntry *entry = (FacronConfEntry *) malloc (sizeof (FacronConfEntry));
     entry->path = strdup (line_beg);
     entry->mask = 0;
     entry->next = previous;
-
-    if (access (entry->path, R_OK))
-    {
-        fprintf (stderr, "warning: No such file or directory: \"%s\"\n", entry->path);
-        goto fail;
-    }
 
     FacronToken token = EMPTY;
     for (ssize_t i = 0; i < len; ++i)
@@ -286,10 +289,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
         {
         case ERROR:
             fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line);
-            free (line_beg);
-            free (entry->path);
-            free (entry);
-            return read_next (previous, conf);
+            goto fail;
         case EMPTY:
             entry->mask |= FacronToken_to_mask (prev_token);
             if (c == SPACE)
@@ -342,9 +342,10 @@ end:;
     return entry;
 
 fail:
-    free (line_beg);
     free (entry->path);
     free (entry);
+fail_early:
+    free (line_beg);
     return read_next (previous, conf);
 }
 
@@ -354,7 +355,12 @@ load_conf (void)
     FILE *conf_file = fopen ("/etc/facron.conf", "r");
 
     if (!conf_file)
+    {
+        fprintf (stderr, "Error: could not load configuration file, does \"/etc/facron.conf\" exist?\n");
         return NULL;
+    }
+
+    fprintf (stderr, "Notice: loading configuration\n");
 
     FacronConfEntry *conf = NULL;
     for (FacronConfEntry *entry; (entry = read_next (conf, conf_file)); conf = entry);

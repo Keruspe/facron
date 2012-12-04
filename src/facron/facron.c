@@ -22,6 +22,7 @@
 
 #include <fcntl.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,11 +36,34 @@
 static int fanotify_fd;
 static FacronConfEntry *_conf = NULL;
 
-static inline void
-walk_conf (int flag)
+typedef enum
 {
+    ADD,
+    REMOVE
+} FacronAction;
+
+static inline void
+walk_conf (FacronAction action)
+{
+    int flag;
+    bool notice = false;
+
+    switch (action) {
+    case ADD:
+        flag = FAN_MARK_ADD;
+        notice = true;
+        break;
+    default:
+        flag = FAN_MARK_REMOVE;
+    }
+
+
     for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
+    {
+        if (notice)
+            fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
         fanotify_mark (fanotify_fd, flag, entry->mask, AT_FDCWD, entry->path);
+    }
 }
 
 
@@ -47,13 +71,13 @@ static inline void
 apply_conf (void)
 {
     _conf = load_conf ();
-    walk_conf (FAN_MARK_ADD);
+    walk_conf (ADD);
 }
 
 static inline void
 unapply_conf (void)
 {
-    walk_conf (FAN_MARK_REMOVE);
+    walk_conf (REMOVE);
     unload_conf (_conf);
 }
 
@@ -82,7 +106,7 @@ signal_handler (int signum)
     case SIGTERM:
         signum = EXIT_SUCCESS;
     default:
-        printf ("Signal %d received, exiting.\n", signum);
+        fprintf (stderr, "Signal %d received, exiting.\n", signum);
         cleanup ();
         exit (signum);
     }
