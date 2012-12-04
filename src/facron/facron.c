@@ -152,7 +152,15 @@ main (void)
             if (path_len < 0)
                 goto next;
             path[path_len] = '\0';
-            printf ("%s\n", path);
+            /* TODO: optimize */
+            for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
+            {
+                if ((entry->mask & metadata->mask) && !strcmp (path, entry->path))
+                {
+                    if (!fork ())
+                        execv (entry->command[0], entry->command);
+                }
+            }
 
 next:
             close (metadata->fd);
