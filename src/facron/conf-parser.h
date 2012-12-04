@@ -206,6 +206,7 @@ typedef enum
     UNDERSCORE,
     PIPE,
     SPACE,
+    COMMA,
     OTHER,
     NB_CHARS
 } FacronChar;
