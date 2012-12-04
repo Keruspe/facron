@@ -44,7 +44,14 @@ walk_conf (int flag)
 
 #define APPLY_CONF walk_conf (FAN_MARK_ADD);
 #define UNAPPLY_CONF walk_conf (FAN_MARK_REMOVE);
-#define REAPPLY_CONF UNAPPLY_CONF APPLY_CONF
+
+static inline void
+reapply_conf (void)
+{
+    UNAPPLY_CONF
+    _conf = reload_conf (_conf);
+    APPLY_CONF
+}
 
 static void
 cleanup (void)
@@ -60,8 +67,7 @@ signal_handler (int signum)
     switch (signum)
     {
     case SIGUSR1:
-        _conf = reload_conf (_conf);
-        REAPPLY_CONF
+        reapply_conf ();
         break;
     case SIGTERM:
         signum = EXIT_SUCCESS;
