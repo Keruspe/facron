@@ -28,8 +28,9 @@ typedef enum
     F1, /* A */
     F2, /* N */
     F3, /* _ */
-    /* FAN_ACCESS */
+    /* FAN_A */
     A0, /* A */
+    /* FAN_ACCESS */
     A1, /* C */
     A2, /* C */
     A3, /* E */
@@ -70,8 +71,9 @@ typedef enum
     N4, /* I */
     N5, /* T */
     N6, /* E */
-    /* FAN_OPEN */
+    /* FAN_O */
     O0, /* O */
+    /* FAN_OPEN */
     O1, /* P */
     O2, /* E */
     O3, /* N */
@@ -112,6 +114,45 @@ typedef enum
     EB, /* I */
     EC, /* L */
     ED, /* D */
+    /* FAN_ALL_ */
+    AD, /* L */
+    AE, /* L */
+    AF, /* _ */
+    /* FAN_ALL_EVENTS */
+    EG, /* E */
+    EH, /* V */
+    EI, /* E */
+    EJ, /* N */
+    EK, /* T */
+    EL, /* S */
+    /* FAN_ALL_PERM_EVENTS */
+    P0, /* P */
+    P1, /* E */
+    P2, /* R */
+    P3, /* M */
+    P4, /* _ */
+    P5, /* E */
+    P6, /* V */
+    P7, /* E */
+    P8, /* N */
+    P9, /* T */
+    PA, /* S */
+    /* FAN_ALL_OUTGOING_EVENTS */
+    OF, /* O */
+    OG, /* U */
+    OH, /* T */
+    OI, /* G */
+    OJ, /* O */
+    OK, /* I */
+    OL, /* N */
+    OM, /* G */
+    ON, /* _ */
+    OO, /* E */
+    OP, /* V */
+    OQ, /* E */
+    OR, /* N */
+    OS, /* T */
+    OT, /* S */
     __ /* ERROR */
 } FacronToken;
 
@@ -128,7 +169,11 @@ typedef enum
 #define FAN_ACCESS_PERM_TOK    AA
 #define FAN_ONDIR_TOK          OD
 #define FAN_EVENT_ON_CHILD_TOK ED
-#define FAN_CLOSE_TOK          C4
+
+#define FAN_CLOSE_TOK               C4
+#define FAN_ALL_EVENTS_TOK          EL
+#define FAN_ALL_PERM_EVENTS_TOK     PA
+#define FAN_ALL_OUTGOING_EVENTS_TOK OT
 
 typedef enum
 {
