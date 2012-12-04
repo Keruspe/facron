@@ -91,12 +91,7 @@ main (void)
         return EXIT_FAILURE;
     }
 
-    if (!(_conf = load_conf ()))
-    {
-        fprintf (stderr, "Failed to load configuration file, do \"/etc/facron.conf\" exist?\n");
-        goto fail;
-    }
-
+    _conf = load_conf ();
     APPLY_CONF
 
     char buf[4096];
