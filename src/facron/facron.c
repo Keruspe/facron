@@ -49,7 +49,6 @@ walk_conf (int flag)
 static void
 cleanup (void)
 {
-    fanotify_mark (fanotify_fd, FAN_MARK_REMOVE, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
     UNAPPLY_CONF
     unload_conf (_conf);
     close (fanotify_fd);
@@ -60,6 +59,10 @@ signal_handler (int signum)
 {
     switch (signum)
     {
+    case SIGUSR1:
+        _conf = reload_conf (_conf);
+        REAPPLY_CONF
+        break;
     case SIGTERM:
         signum = EXIT_SUCCESS;
     default:
@@ -74,14 +77,13 @@ main (void)
 {
     signal (SIGTERM, &signal_handler);
     signal (SIGINT, &signal_handler);
+    signal (SIGUSR1, &signal_handler);
 
     if ((fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE)) < 0)
     {
         fprintf (stderr, "Could not initialize fanotify\n");
         return EXIT_FAILURE;
     }
-
-    fanotify_mark (fanotify_fd, FAN_MARK_ADD, FAN_MODIFY|FAN_CLOSE_WRITE, AT_FDCWD, "/etc/facron.conf");
 
     if (!(_conf = load_conf ()))
     {
@@ -117,12 +119,6 @@ main (void)
                 goto next;
             path[path_len] = '\0';
             printf ("%s\n", path);
-
-            if (!strcmp (path, "/etc/facron.conf"))
-            {
-                _conf = reload_conf (_conf);
-                REAPPLY_CONF
-            }
 
 next:
             close (metadata->fd);
