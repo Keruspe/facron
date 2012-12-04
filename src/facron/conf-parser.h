@@ -181,6 +181,4 @@ FacronConfEntry *load_conf (void);
 
 void unload_conf (FacronConfEntry *conf);
 
-FacronConfEntry *reload_conf (FacronConfEntry *conf);
-
 #endif /* __FACRON_CONF_PARSER_H_ */

@@ -35,29 +35,39 @@
 static int fanotify_fd;
 static FacronConfEntry *_conf = NULL;
 
-static void
+static inline void
 walk_conf (int flag)
 {
     for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
         fanotify_mark (fanotify_fd, flag, entry->mask, AT_FDCWD, entry->path);
 }
 
-#define APPLY_CONF walk_conf (FAN_MARK_ADD);
-#define UNAPPLY_CONF walk_conf (FAN_MARK_REMOVE);
+
+static inline void
+apply_conf (void)
+{
+    _conf = load_conf ();
+    walk_conf (FAN_MARK_ADD);
+}
+
+static inline void
+unapply_conf (void)
+{
+    walk_conf (FAN_MARK_REMOVE);
+    unload_conf (_conf);
+}
 
 static inline void
 reapply_conf (void)
 {
-    UNAPPLY_CONF
-    _conf = reload_conf (_conf);
-    APPLY_CONF
+    unapply_conf ();
+    apply_conf ();
 }
 
 static void
 cleanup (void)
 {
-    UNAPPLY_CONF
-    unload_conf (_conf);
+    unapply_conf ();
     close (fanotify_fd);
 }
 
@@ -91,8 +101,7 @@ main (void)
         return EXIT_FAILURE;
     }
 
-    _conf = load_conf ();
-    APPLY_CONF
+    apply_conf ();
 
     char buf[4096];
     size_t len;

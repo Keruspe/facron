@@ -376,10 +376,3 @@ unload_conf (FacronConfEntry *conf)
         free (old);
     }
 }
-
-FacronConfEntry *
-reload_conf (FacronConfEntry *conf)
-{
-    unload_conf (conf);
-    return load_conf ();
-}
