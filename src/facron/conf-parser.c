@@ -19,6 +19,7 @@
 
 #include "conf-parser.h"
 
+#include <libgen.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -393,7 +394,9 @@ end:
             break;
 
         line[i] = '\0';
-        entry->command[n] = (strcmp (line, "$$")) ? strdup (line) : strdup (entry->path);
+        entry->command[n] = (!strcmp (line, "$$")) ? strdup (entry->path):
+                            (!strcmp (line, "$@")) ? dirname (strdup (entry->path)):
+                            strdup (line);
         line += (i + 1);
         len -= (i + 1);
     }
