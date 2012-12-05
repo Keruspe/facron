@@ -21,12 +21,9 @@
 #include "conf-parser.h"
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <linux/fanotify.h>
 
 static inline char *
 basename (const char *filename)
@@ -42,6 +39,12 @@ dirname (const char *filename)
         --c;
     return (c == filename) ? strdup (".") :
                             (char *) memcpy (calloc (c - filename + 1, sizeof (char)), filename, c - filename);
+}
+
+static inline bool
+is_space (char c)
+{
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
 static FacronConfEntry *
@@ -90,39 +93,31 @@ read_next (FacronConfEntry *previous, FILE *conf)
     entry->path = strdup (line_beg);
     entry->next = previous;
 
-    FacronToken token = EMPTY;
     int n = 0;
-    for (ssize_t i = 0; i < len && n < 511; ++i)
+    ssize_t i = 0;
+    FacronState state;
+    unsigned long long mask;
+    while ((state = next_token (line, &i, len, &mask))) /* != S_END */
     {
-        FacronToken prev_token = token;
-        FacronChar c = to_FacronChar (line[i]);
-        token = symbols[token][c];
-        switch (token)
+        switch (state)
         {
-        case ERROR:
+        case S_ERROR:
             line[len - 1] = '\0';
             fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line + i);
             goto fail;
-        case EMPTY:
-            entry->mask[n] |= FacronToken_to_mask (prev_token);
-            switch (c)
-            {
-            case SPACE:
-                line += (i + 1);
-                len -= (i + 1);
-                goto end;
-            case COMMA:
-                ++n;
-                break;
-            default:
-                break;
-            }
+        case S_COMMA:
+            entry->mask[n++] |= mask;
+            break;
+        case S_PIPE:
+            entry->mask[n] |= mask;
         default:
             break;
         }
     }
+    entry->mask[n] |= mask;
+    line += (i + 1);
+    len -= (i + 1);
 
-end:
     if (n == 0 && !entry->mask[n])
     {
         fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
@@ -130,7 +125,7 @@ end:
     }
 
     n = 0;
-    for (ssize_t i = 0; len > 0 && n < 511; ++n, i = 0)
+    for (i = 0; len > 0 && n < 511; ++n, i = 0)
     {
         while (is_space (line[0]) && i < len)
         {

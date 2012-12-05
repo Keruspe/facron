@@ -18,18 +18,11 @@
  */
 
 #include "conf-lexer.h"
-#include "conf-parser.h"
-
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include <linux/fanotify.h>
 
 static FacronChar
-to_FacronChar (char c)
+char_to_FacronChar (char c)
 {
     switch (c)
     {
@@ -97,6 +90,47 @@ to_FacronChar (char c)
         return OTHER;
     }
 }
+static unsigned long long
+FacronToken_to_mask (FacronToken t)
+{
+    switch (t)
+    {
+    case FAN_ACCESS_TOK:
+        return FAN_ACCESS;
+    case FAN_MODIFY_TOK:
+        return FAN_MODIFY;
+    case FAN_CLOSE_WRITE_TOK:
+        return FAN_CLOSE_WRITE;
+    case FAN_CLOSE_NOWRITE_TOK:
+        return FAN_CLOSE_NOWRITE;
+    case FAN_OPEN_TOK:
+        return FAN_OPEN;
+    case FAN_Q_OVERFLOW_TOK:
+        return FAN_Q_OVERFLOW;
+    case FAN_OPEN_PERM_TOK:
+        return FAN_OPEN_PERM;
+    case FAN_ACCESS_PERM_TOK:
+        return FAN_ACCESS_PERM;
+    case FAN_ONDIR_TOK:
+        return FAN_ONDIR;
+    case FAN_EVENT_ON_CHILD_TOK:
+        return FAN_EVENT_ON_CHILD;
+    case FAN_CLOSE_TOK:
+        return FAN_CLOSE;
+    case FAN_ALL_EVENTS_TOK:
+        return FAN_ALL_EVENTS;
+    case FAN_ALL_PERM_EVENTS_TOK:
+        return FAN_ALL_PERM_EVENTS;
+    case FAN_ALL_OUTGOING_EVENTS_TOK:
+        return FAN_ALL_OUTGOING_EVENTS;
+    case EMPTY:
+        return 0;
+    default:
+        fprintf (stderr, "Warning: unknown token: %d\n", t);
+        return 0;
+    }
+}
+
 
 static const char symbols[ERROR][NB_CHARS] =
 {
@@ -235,188 +269,37 @@ static const char symbols[ERROR][NB_CHARS] =
           /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |, \ ,  ,, ... */
 };
 
-static inline bool
-is_space (char c)
+FacronState
+next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask)
 {
-    return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
-}
-
-static unsigned long long
-FacronToken_to_mask (FacronToken t)
-{
-    switch (t)
-    {
-    case FAN_ACCESS_TOK:
-        return FAN_ACCESS;
-    case FAN_MODIFY_TOK:
-        return FAN_MODIFY;
-    case FAN_CLOSE_WRITE_TOK:
-        return FAN_CLOSE_WRITE;
-    case FAN_CLOSE_NOWRITE_TOK:
-        return FAN_CLOSE_NOWRITE;
-    case FAN_OPEN_TOK:
-        return FAN_OPEN;
-    case FAN_Q_OVERFLOW_TOK:
-        return FAN_Q_OVERFLOW;
-    case FAN_OPEN_PERM_TOK:
-        return FAN_OPEN_PERM;
-    case FAN_ACCESS_PERM_TOK:
-        return FAN_ACCESS_PERM;
-    case FAN_ONDIR_TOK:
-        return FAN_ONDIR;
-    case FAN_EVENT_ON_CHILD_TOK:
-        return FAN_EVENT_ON_CHILD;
-    case FAN_CLOSE_TOK:
-        return FAN_CLOSE;
-    case FAN_ALL_EVENTS_TOK:
-        return FAN_ALL_EVENTS;
-    case FAN_ALL_PERM_EVENTS_TOK:
-        return FAN_ALL_PERM_EVENTS;
-    case FAN_ALL_OUTGOING_EVENTS_TOK:
-        return FAN_ALL_OUTGOING_EVENTS;
-    case EMPTY:
-        return 0;
-    default:
-        fprintf (stderr, "Warning: unknown token: %d\n", t);
-        return 0;
-    }
-}
-
-static FacronConfEntry *
-read_next (FacronConfEntry *previous, FILE *conf)
-{
-    size_t dummy_len = 0;
-    ssize_t len;
-    char *line = NULL;
-    if ((len = getline (&line, &dummy_len, conf)) < 1)
-        return NULL;
-
-    char *line_beg = line;
-    if (is_space (line[0]))
-        goto fail_early;
-
-    for (ssize_t i = 1; i < len; ++i)
-    {
-        if (is_space (line[i]))
-        {
-            line[i] = '\0';
-            line += (i + 1);
-            len -= (i + 1);
-            break;
-        }
-    }
-
-    if (access (line_beg, R_OK))
-    {
-        fprintf (stderr, "warning: No such file or directory: \"%s\"\n", line_beg);
-        goto fail_early;
-    }
-
-    while (is_space (line[0]))
-    {
-        ++line;
-        --len;
-    }
-
-    if (0 == len)
-    {
-        fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
-        goto fail_early;
-    }
-
-    FacronConfEntry *entry = (FacronConfEntry *) calloc (1, sizeof (FacronConfEntry));
-    entry->path = strdup (line_beg);
-    entry->next = previous;
-
     FacronToken token = EMPTY;
-    int n = 0;
-    for (ssize_t i = 0; i < len && n < 511; ++i)
+    while (*i < len) /* TODO: check n */
     {
         FacronToken prev_token = token;
-        FacronChar c = to_FacronChar (line[i]);
+        FacronChar c = char_to_FacronChar (line[*i]);
         token = symbols[token][c];
         switch (token)
         {
         case ERROR:
-            line[len - 1] = '\0';
-            fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line + i);
-            goto fail;
+            return S_ERROR;
         case EMPTY:
-            entry->mask[n] |= FacronToken_to_mask (prev_token);
+            *mask = FacronToken_to_mask (prev_token);
             switch (c)
             {
             case SPACE:
-                line += (i + 1);
-                len -= (i + 1);
-                goto end;
+                return S_END;
             case COMMA:
-                ++n;
-                break;
+                return S_COMMA;
+            case PIPE:
+                return S_PIPE;
             default:
                 break;
             }
         default:
             break;
         }
+        ++(*i);
     }
 
-end:
-    if (n == 0 && !entry->mask[n])
-    {
-        fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
-        goto fail;
-    }
-
-    n = 0;
-    for (ssize_t i = 0; len > 0 && n < 511; ++n, i = 0)
-    {
-        while (is_space (line[0]) && i < len)
-        {
-            ++line;
-            --len;
-        }
-
-        char delim = (line[0] == '"' || line[0] == '\'') ? line[0] : '\0';
-        if (delim != '\0')
-        {
-            ++line;
-            --len;
-        }
-
-        while (i < len &&
-                ((delim == '\0' && !is_space (line[i])) ||
-                 (delim != '\0' && line[i] != delim)))
-        {
-            ++i;
-        }
-
-        if (i == len)
-            break;
-
-        line[i] = '\0';
-        entry->command[n] = (!strcmp (line, "$$")) ? strdup (entry->path):
-                            (!strcmp (line, "$@")) ? dirname (entry->path):
-                            (!strcmp (line, "$#")) ? basename (entry->path):
-                            strdup (line);
-        line += (i + 1);
-        len -= (i + 1);
-    }
-
-    if (n == 0)
-    {
-        fprintf (stderr, "Error: no command line specified for \"%s\"\n", entry->path);
-        goto fail;
-    }
-
-    entry->command[n] = NULL;
-
-    free (line_beg);
-    return entry;
-
-fail:
-    free (entry->path);
-    free (entry);
-fail_early:
-    free (line_beg);
-    return read_next (previous, conf);
+    return ERROR;
 }

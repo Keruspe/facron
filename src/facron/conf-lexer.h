@@ -20,6 +20,8 @@
 #ifndef __FACRON_CONF_LEXER_H__
 #define __FACRON_CONF_LEXER_H__
 
+#include <stdio.h>
+
 typedef enum
 {
     _0, /* BEGIN */
@@ -210,5 +212,15 @@ typedef enum
     OTHER,
     NB_CHARS
 } FacronChar;
+
+typedef enum
+{
+    S_END,
+    S_ERROR,
+    S_PIPE,
+    S_COMMA
+} FacronState;
+
+FacronState next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask);
 
 #endif /* __FACRON_CONF_LEXER_H__ */
