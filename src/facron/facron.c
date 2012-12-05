@@ -36,6 +36,8 @@
 static int fanotify_fd;
 static FacronConfEntry *_conf = NULL;
 
+typedef struct fanotify_event_metadata FacronMetadata;
+
 typedef enum
 {
     ADD,
@@ -57,7 +59,6 @@ walk_conf (FacronAction action)
         flag = FAN_MARK_REMOVE;
         break;
     }
-
 
     for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
     {
@@ -91,7 +92,7 @@ reapply_conf (void)
     apply_conf ();
 }
 
-static void
+static inline void
 cleanup (void)
 {
     unapply_conf ();
