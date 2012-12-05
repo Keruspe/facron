@@ -46,10 +46,6 @@ noinst_LTLIBRARIES = $(NULL)
 # Real stuff goes in these subfiles
 
 include src/facron.mk
-
-include data/completions.mk
-include data/pkg-config.mk
-
 include man/1.mk
 
 # Maintainance stuff
