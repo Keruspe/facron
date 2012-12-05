@@ -235,9 +235,9 @@ static const char symbols[ERROR][NB_CHARS] =
 };
 
 static inline bool
-is_space (char c, bool allow_newline)
+is_space (char c)
 {
-    return (c == ' ' || c == '\t' || (allow_newline && (c == '\n' || c == '\r')));
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
 static unsigned long long
@@ -291,12 +291,12 @@ read_next (FacronConfEntry *previous, FILE *conf)
         return NULL;
 
     char *line_beg = line;
-    if (is_space (line[0], true))
+    if (is_space (line[0]))
         goto fail_early;
 
     for (ssize_t i = 1; i < len; ++i)
     {
-        if (is_space (line[i], true))
+        if (is_space (line[i]))
         {
             line[i] = '\0';
             line += (i + 1);
@@ -311,7 +311,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
         goto fail_early;
     }
 
-    while (is_space (line[0], false))
+    while (is_space (line[0]))
     {
         ++line;
         --len;
@@ -369,14 +369,14 @@ end:
     n = 0;
     for (ssize_t i = 0; len > 0 && n < 511; ++n, i = 0)
     {
-        while (is_space (line[0], false) && i < len)
+        while (is_space (line[0]) && i < len)
         {
             ++line;
             --len;
         }
 
         /* TODO: handle "foo bar" */
-        while (i < len && !is_space (line[i], true))
+        while (i < len && !is_space (line[i]))
             ++i;
 
         if (i == len)
