@@ -375,9 +375,19 @@ end:
             --len;
         }
 
-        /* TODO: handle "foo bar" */
-        while (i < len && !is_space (line[i]))
+        char delim = (line[0] == '"' || line[0] == '\'') ? line[0] : '\0';
+        if (delim != '\0')
+        {
+            ++line;
+            --len;
+        }
+
+        while (i < len &&
+                ((delim == '\0' && !is_space (line[i])) ||
+                 (delim != '\0' && line[i] != delim)))
+        {
             ++i;
+        }
 
         if (i == len)
             break;

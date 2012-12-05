@@ -63,8 +63,9 @@ walk_conf (FacronAction action)
     {
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
+
         for (int i = 0; i < 512 && entry->mask[i]; ++i)
-        fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
+            fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
     }
 }
 
