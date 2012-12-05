@@ -396,6 +396,7 @@ end:
         line[i] = '\0';
         entry->command[n] = (!strcmp (line, "$$")) ? strdup (entry->path):
                             (!strcmp (line, "$@")) ? dirname (strdup (entry->path)):
+                            (!strcmp (line, "$#")) ? strdup (strrchr (entry->path, '/') + 1):
                             strdup (line);
         line += (i + 1);
         len -= (i + 1);
