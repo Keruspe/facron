@@ -63,7 +63,8 @@ walk_conf (FacronAction action)
     {
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
-        fanotify_mark (fanotify_fd, flag, entry->mask, AT_FDCWD, entry->path);
+        for (int i = 0; i < 512 && entry->mask[i]; ++i)
+        fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
     }
 }
 
@@ -153,13 +154,19 @@ main (void)
             if (path_len < 0)
                 goto next;
             path[path_len] = '\0';
-            /* TODO: optimize */
+
             for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
             {
-                if ((entry->mask & metadata->mask) && !strcmp (path, entry->path))
+                if (!strcmp (path, entry->path))
                 {
-                    if (!fork ())
-                        execv (entry->command[0], entry->command);
+                    for (int i = 0; i < 512 && entry->mask[i]; ++i)
+                    {
+                        if ((entry->mask[i] & metadata->mask) == entry->mask[i])
+                        {
+                            if (!fork ())
+                                execv (entry->command[0], entry->command);
+                        }
+                    }
                 }
             }
 

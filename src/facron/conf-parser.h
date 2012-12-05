@@ -216,7 +216,7 @@ typedef struct FacronConfEntry FacronConfEntry;
 struct FacronConfEntry
 {
     char *path;
-    unsigned long long mask;
+    unsigned long long mask[512];
     char *command[512];
     FacronConfEntry *next;
 };
