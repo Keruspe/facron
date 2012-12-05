@@ -19,7 +19,6 @@
 
 #include "conf-parser.h"
 
-#include <libgen.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -282,6 +281,22 @@ FacronToken_to_mask (FacronToken t)
     }
 }
 
+static inline char *
+basename (const char *filename)
+{
+    return strdup (strrchr (filename, '/') + 1);
+}
+
+static inline char *
+dirname (const char *filename)
+{
+    char *c = strrchr (filename, '/');
+    while (c != filename && c[-1] == '/')
+        --c;
+    return (c == filename) ? strdup (".") :
+                            (char *) memcpy (calloc (c - filename + 1, sizeof (char)), filename, c - filename);
+}
+
 static FacronConfEntry *
 read_next (FacronConfEntry *previous, FILE *conf)
 {
@@ -395,8 +410,8 @@ end:
 
         line[i] = '\0';
         entry->command[n] = (!strcmp (line, "$$")) ? strdup (entry->path):
-                            (!strcmp (line, "$@")) ? dirname (strdup (entry->path)):
-                            (!strcmp (line, "$#")) ? strdup (strrchr (entry->path, '/') + 1):
+                            (!strcmp (line, "$@")) ? dirname (entry->path):
+                            (!strcmp (line, "$#")) ? basename (entry->path):
                             strdup (line);
         line += (i + 1);
         len -= (i + 1);
