@@ -130,8 +130,7 @@ facron_parser_parse_entry (FacronParser *parser)
     return entry;
 
 fail:
-    free (entry->path);
-    free (entry);
+    facron_conf_entry_free (entry);
 fail_early:
     return facron_parser_parse_entry (parser);
 }
