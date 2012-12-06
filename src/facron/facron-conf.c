@@ -76,7 +76,7 @@ facron_conf_new (void)
 
     conf->parser = facron_parser_new ();
     conf->entries = NULL;
-    facron_conf_load (conf); /* TODO: check */
+    facron_conf_load (conf);
 
     return conf;
 }

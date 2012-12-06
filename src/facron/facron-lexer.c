@@ -312,7 +312,7 @@ facron_lexer_invalid_line (FacronLexer *lexer)
 bool
 facron_lexer_end_of_line (FacronLexer *lexer)
 {
-    return (lexer->len == 0); /* TODO: check index */
+    return (lexer->len == 0 || lexer->index == lexer->len);
 }
 
 char *
@@ -361,7 +361,7 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
         return R_ERROR;
 
     FacronState state = EMPTY;
-    while (lexer->index < lexer->len) /* TODO: check n */
+    while (lexer->index < lexer->len)
     {
         FacronState prev_state = state;
         FacronChar c = char_to_FacronChar (lexer->line[lexer->index]);
@@ -434,7 +434,7 @@ facron_lexer_new (void)
     FacronLexer *lexer = (FacronLexer *) malloc (sizeof (FacronLexer));
 
     lexer->file = NULL;
-    facron_lexer_reload_file (lexer); /* TODO: check return value */
+    facron_lexer_reload_file (lexer);
 
     return lexer;
 }

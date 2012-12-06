@@ -77,7 +77,7 @@ facron_parser_parse_entry (FacronParser *parser)
     int n = 0;
     FacronResult result;
     unsigned long long mask;
-    while ((result = facron_lexer_next_token (parser->lexer, &mask))) /* != S_END */
+    while (n < 511 && (result = facron_lexer_next_token (parser->lexer, &mask))) /* != S_END */
     {
         switch (result)
         {

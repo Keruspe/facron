@@ -29,6 +29,7 @@ AM_LIBS = \
 
 EXTRA_DIST = \
 	autogen.sh \
+	NEWS \
 	$(NULL)
 
 CLEANFILES = $(NULL)
