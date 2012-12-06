@@ -29,6 +29,8 @@ FacronConfEntry *facron_parser_parse_entry (FacronParser *parser);
 
 bool facron_parser_reload (FacronParser *parser);
 
+void facron_parser_free (FacronParser *parser);
+
 FacronParser *facron_parser_new (void);
     
 #endif /* __FACRON_CONF_PARSER_H_ */

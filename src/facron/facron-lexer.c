@@ -417,6 +417,16 @@ facron_lexer_reload_file (FacronLexer *lexer)
     return true;
 }
 
+void
+facron_lexer_free (FacronLexer *lexer)
+{
+    if (lexer->file)
+        fclose (lexer->file);
+    if (lexer->line_beg)
+        free (lexer->line_beg);
+    free (lexer);
+}
+
 FacronLexer *
 facron_lexer_new (void)
 {

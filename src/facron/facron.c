@@ -96,6 +96,7 @@ static inline void
 cleanup (void)
 {
     unapply_conf ();
+    facron_conf_free (_conf);
     close (fanotify_fd);
 }
 

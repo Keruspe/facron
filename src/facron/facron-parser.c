@@ -142,6 +142,13 @@ facron_parser_reload (FacronParser *parser)
     return facron_lexer_reload_file (parser->lexer);
 }
 
+void
+facron_parser_free (FacronParser *parser)
+{
+    facron_lexer_free (parser->lexer);
+    free (parser);
+}
+
 FacronParser *
 facron_parser_new (void)
 {

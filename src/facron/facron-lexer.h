@@ -238,6 +238,8 @@ FacronResult facron_lexer_next_token (FacronLexer *lexer, unsigned long long *ma
 
 bool facron_lexer_reload_file (FacronLexer *lexer);
 
+void facron_lexer_free (FacronLexer *lexer);
+
 FacronLexer *facron_lexer_new (void);
 
 #endif /* __FACRON_CONF_LEXER_H__ */

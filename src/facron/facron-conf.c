@@ -60,6 +60,15 @@ facron_conf_get_entries (FacronConf *conf)
     return conf->entries;
 }
 
+void
+facron_conf_free (FacronConf *conf)
+{
+    if (conf->entries)
+        facron_conf_entry_free (conf->entries);
+    facron_parser_free (conf->parser);
+    free (conf);
+}
+
 FacronConf *
 facron_conf_new (void)
 {
