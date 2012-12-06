@@ -17,6 +17,7 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "facron-conf-entry.h"
 #include "facron-lexer.h"
 #include "facron-parser.h"
 
@@ -27,7 +28,7 @@
 struct FacronParser
 {
     FacronLexer *lexer;
-    FacronConf *previous_entry;
+    FacronConfEntry *previous_entry;
 };
 
 static inline char *
@@ -46,7 +47,7 @@ dirname (const char *filename)
                             (char *) memcpy (calloc (c - filename + 1, sizeof (char)), filename, c - filename);
 }
 
-FacronConf *
+FacronConfEntry *
 facron_parser_parse_entry (FacronParser *parser)
 {
     if (facron_lexer_read_line (parser->lexer))
@@ -72,9 +73,7 @@ facron_parser_parse_entry (FacronParser *parser)
         goto fail_early;
     }
 
-    FacronConf *entry = (FacronConf *) calloc (1, sizeof (FacronConf));
-    entry->path = path;
-    entry->next = parser->previous_entry;
+    FacronConfEntry *entry = facron_conf_entry_new (parser->previous_entry, path);
 
     int n = 0;
     FacronResult result;
