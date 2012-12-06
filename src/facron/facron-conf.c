@@ -27,7 +27,7 @@ struct FacronConf
 };
 
 static bool
-facron_conf_load_conf (FacronConf *conf)
+facron_conf_load (FacronConf *conf)
 {
     if (!facron_parser_reload (conf->parser))
         return false;
@@ -44,7 +44,7 @@ facron_conf_reload (FacronConf *conf)
 {
     FacronConfEntry *entries = conf->entries;
     conf->entries = NULL;
-    if (!facron_conf_load_conf (conf))
+    if (!facron_conf_load (conf))
     {
         conf->entries = entries;
         return false;
@@ -67,6 +67,7 @@ facron_conf_new (void)
 
     conf->parser = facron_parser_new ();
     conf->entries = NULL;
+    facron_conf_load (conf); /* TODO: check */
 
     return conf;
 }

@@ -129,6 +129,7 @@ main (void)
         return EXIT_FAILURE;
     }
 
+    _conf = facron_conf_new ();
     apply_conf ();
 
     char buf[4096];

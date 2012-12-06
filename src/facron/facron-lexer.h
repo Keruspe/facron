@@ -236,7 +236,7 @@ void  facron_lexer_skip_spaces  (FacronLexer *lexer);
 
 FacronResult facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask);
 
-bool facron_lexer_reload_conf (FacronLexer *lexer);
+bool facron_lexer_reload_file (FacronLexer *lexer);
 
 FacronLexer *facron_lexer_new (void);
 

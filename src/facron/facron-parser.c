@@ -49,7 +49,7 @@ dirname (const char *filename)
 FacronConfEntry *
 facron_parser_parse_entry (FacronParser *parser)
 {
-    if (facron_lexer_read_line (parser->lexer))
+    if (!facron_lexer_read_line (parser->lexer))
         return NULL;
 
     if (facron_lexer_invalid_line (parser->lexer))
@@ -102,10 +102,9 @@ facron_parser_parse_entry (FacronParser *parser)
     }
 
     n = 0;
+    facron_lexer_skip_spaces (parser->lexer);
     while (!facron_lexer_end_of_line (parser->lexer) && n < 511)
     {
-        facron_lexer_skip_spaces (parser->lexer);
-
         char *tmp = facron_lexer_read_string (parser->lexer);
         entry->command[n++] = (!strcmp (tmp, "$$")) ? strdup (entry->path):
                               (!strcmp (tmp, "$@")) ? dirname (entry->path):
@@ -115,6 +114,8 @@ facron_parser_parse_entry (FacronParser *parser)
             free (tmp);
         else
             entry->command[n-1] = tmp;
+
+        facron_lexer_skip_spaces (parser->lexer);
     }
 
     if (n == 0)
@@ -138,7 +139,7 @@ fail_early:
 bool
 facron_parser_reload (FacronParser *parser)
 {
-    return facron_lexer_reload_conf (parser->lexer);
+    return facron_lexer_reload_file (parser->lexer);
 }
 
 FacronParser *

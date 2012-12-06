@@ -318,7 +318,7 @@ facron_lexer_end_of_line (FacronLexer *lexer)
 char *
 facron_lexer_read_string (FacronLexer *lexer)
 {
-    if (lexer->line == NULL)
+    if (!lexer->line || !lexer->len)
         return NULL;
 
     char delim = (lexer->line[0] == '"' || lexer->line[0] == '\'') ? lexer->line[0] : '\0';
@@ -374,11 +374,13 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
             return R_ERROR;
         case EMPTY:
             *mask = FacronToken_to_mask (prev_state);
+            ++lexer->line;
+            --lexer->len;
             switch (c)
             {
             case C_SPACE:
-                lexer->line += (lexer->index + 1);
-                lexer->len -= (lexer->index + 1);
+                lexer->line += (lexer->index);
+                lexer->len -= (lexer->index);
                 lexer->index = 0;
                 return R_END;
             case C_COMMA:
@@ -386,7 +388,7 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
             case C_PIPE:
                 return R_PIPE;
             default:
-                break;
+                return R_ERROR;
             }
         default:
             break;
@@ -398,17 +400,17 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
 }
 
 bool
-facron_lexer_reload_conf (FacronLexer *lexer)
+facron_lexer_reload_file (FacronLexer *lexer)
 {
     if (lexer->file)
         fclose (lexer->file);
 
-    lexer->file = fopen (SYSCONFDIR "facron.conf", "ro");
+    lexer->file = fopen (SYSCONFDIR "/facron.conf", "ro");
     lexer->line = lexer->line_beg = NULL;
 
     if (!lexer->file)
     {
-        fprintf (stderr, "Error: could not load configuration file, does " SYSCONFDIR "\"facron.conf\" exist?\n");
+        fprintf (stderr, "Error: could not load configuration file, does \"" SYSCONFDIR "/facron.conf\" exist?\n");
         return false;
     }
 
@@ -421,7 +423,7 @@ facron_lexer_new (void)
     FacronLexer *lexer = (FacronLexer *) malloc (sizeof (FacronLexer));
 
     lexer->file = NULL;
-    facron_lexer_reload_conf (lexer); /* TODO: check return value */
+    facron_lexer_reload_file (lexer); /* TODO: check return value */
 
     return lexer;
 }
