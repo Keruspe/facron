@@ -139,6 +139,7 @@ fail_early:
 bool
 facron_parser_reload (FacronParser *parser)
 {
+    parser->previous_entry = NULL;
     return facron_lexer_reload_file (parser->lexer);
 }
 

@@ -407,6 +407,7 @@ facron_lexer_reload_file (FacronLexer *lexer)
 
     lexer->file = fopen (SYSCONFDIR "/facron.conf", "ro");
     lexer->line = lexer->line_beg = NULL;
+    lexer->index = 0;
 
     if (!lexer->file)
     {
