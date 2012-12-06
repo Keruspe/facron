@@ -19,11 +19,9 @@
 
 #include "config.h"
 #include "facron-conf.h"
-#include "facron-conf-entry.h"
 
 #include <fcntl.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

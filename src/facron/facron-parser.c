@@ -21,7 +21,6 @@
 #include "facron-lexer.h"
 #include "facron-parser.h"
 
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 

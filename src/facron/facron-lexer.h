@@ -21,7 +21,6 @@
 #define __FACRON_CONF_LEXER_H__
 
 #include <stdbool.h>
-#include <stdio.h>
 
 typedef struct FacronLexer FacronLexer;
 
