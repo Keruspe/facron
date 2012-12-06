@@ -17,17 +17,17 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "conf-lexer.h"
-#include "conf-parser.h"
+#include "facron-lexer.h"
+#include "facron-parser.h"
 
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 struct FacronParser
 {
-    int dummy;
+    FacronLexer *lexer;
+    FacronConf *previous_entry;
 };
 
 static inline char *
@@ -46,82 +46,56 @@ dirname (const char *filename)
                             (char *) memcpy (calloc (c - filename + 1, sizeof (char)), filename, c - filename);
 }
 
-static inline bool
-is_space (char c)
-{
-    return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
-}
-
 FacronConf *
-read_next (FacronConf *previous, FILE *conf)
+facron_parser_parse_entry (FacronParser *parser)
 {
-    size_t dummy_len = 0;
-    ssize_t len;
-    char *line = NULL;
-    if ((len = getline (&line, &dummy_len, conf)) < 1)
+    if (facron_lexer_read_line (parser->lexer))
         return NULL;
 
-    char *line_beg = line;
-    if (is_space (line[0]))
+    if (facron_lexer_invalid_line (parser->lexer))
         goto fail_early;
 
-    for (ssize_t i = 1; i < len; ++i)
-    {
-        if (is_space (line[i]))
-        {
-            line[i] = '\0';
-            line += (i + 1);
-            len -= (i + 1);
-            break;
-        }
-    }
+    char *path = facron_lexer_read_string (parser->lexer);
 
-    if (access (line_beg, R_OK))
+    if (access (path, R_OK))
     {
-        fprintf (stderr, "warning: No such file or directory: \"%s\"\n", line_beg);
+        fprintf (stderr, "warning: No such file or directory: \"%s\"\n", path);
+        free (path);
         goto fail_early;
     }
 
-    while (is_space (line[0]))
-    {
-        ++line;
-        --len;
-    }
+    facron_lexer_skip_spaces (parser->lexer);
 
-    if (0 == len)
+    if (facron_lexer_end_of_line (parser->lexer))
     {
         fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
         goto fail_early;
     }
 
     FacronConf *entry = (FacronConf *) calloc (1, sizeof (FacronConf));
-    entry->path = strdup (line_beg);
-    entry->next = previous;
+    entry->path = path;
+    entry->next = parser->previous_entry;
 
     int n = 0;
-    ssize_t i = 0;
     FacronResult result;
     unsigned long long mask;
-    while ((result = next_token (line, &i, len, &mask))) /* != S_END */
+    while ((result = facron_lexer_next_token (parser->lexer, &mask))) /* != S_END */
     {
         switch (result)
         {
         case R_ERROR:
-            line[len - 1] = '\0';
-            fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line + i);
             goto fail;
         case R_COMMA:
             entry->mask[n++] |= mask;
             break;
         case R_PIPE:
             entry->mask[n] |= mask;
+            break;
         default:
             break;
         }
     }
     entry->mask[n] |= mask;
-    line += (i + 1);
-    len -= (i + 1);
 
     if (n == 0 && !entry->mask[n])
     {
@@ -130,38 +104,19 @@ read_next (FacronConf *previous, FILE *conf)
     }
 
     n = 0;
-    for (i = 0; len > 0 && n < 511; ++n, i = 0)
+    while (!facron_lexer_end_of_line (parser->lexer) && n < 511)
     {
-        while (is_space (line[0]) && i < len)
-        {
-            ++line;
-            --len;
-        }
+        facron_lexer_skip_spaces (parser->lexer);
 
-        char delim = (line[0] == '"' || line[0] == '\'') ? line[0] : '\0';
-        if (delim != '\0')
-        {
-            ++line;
-            --len;
-        }
-
-        while (i < len &&
-                ((delim == '\0' && !is_space (line[i])) ||
-                 (delim != '\0' && line[i] != delim)))
-        {
-            ++i;
-        }
-
-        if (i == len)
-            break;
-
-        line[i] = '\0';
-        entry->command[n] = (!strcmp (line, "$$")) ? strdup (entry->path):
-                            (!strcmp (line, "$@")) ? dirname (entry->path):
-                            (!strcmp (line, "$#")) ? basename (entry->path):
-                            strdup (line);
-        line += (i + 1);
-        len -= (i + 1);
+        char *tmp = facron_lexer_read_string (parser->lexer);
+        entry->command[n++] = (!strcmp (tmp, "$$")) ? strdup (entry->path):
+                              (!strcmp (tmp, "$@")) ? dirname (entry->path):
+                              (!strcmp (tmp, "$#")) ? basename (entry->path):
+                              NULL;
+        if (entry->command[n-1])
+            free (tmp);
+        else
+            entry->command[n-1] = tmp;
     }
 
     if (n == 0)
@@ -171,14 +126,29 @@ read_next (FacronConf *previous, FILE *conf)
     }
 
     entry->command[n] = NULL;
+    parser->previous_entry = entry;
 
-    free (line_beg);
     return entry;
 
 fail:
     free (entry->path);
     free (entry);
 fail_early:
-    free (line_beg);
-    return read_next (previous, conf);
+    return facron_parser_parse_entry (parser);
+}
+
+FacronParser *
+facron_parser_new (void)
+{
+    FacronLexer *lexer = facron_lexer_new ();
+
+    if (!lexer)
+        return NULL;
+
+    FacronParser *parser = (FacronParser *) malloc (sizeof (FacronParser));
+
+    parser->lexer = lexer;
+    parser->previous_entry = NULL;
+
+    return parser;
 }

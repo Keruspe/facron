@@ -22,10 +22,10 @@
 
 #include "conf.h"
 
-#include <stdio.h>
-
 typedef struct FacronParser FacronParser;
 
-FacronConf *read_next (FacronConf *previous, FILE *conf);
+FacronConf *facron_parser_parse_entry (FacronParser *parser);
+
+FacronParser *facron_parser_new (void);
     
 #endif /* __FACRON_CONF_PARSER_H_ */

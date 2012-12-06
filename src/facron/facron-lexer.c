@@ -17,7 +17,7 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "conf-lexer.h"
+#include "facron-lexer.h"
 
 #include <stdlib.h>
 #include <string.h>
