@@ -79,51 +79,52 @@ char_to_FacronChar (char c)
     case 'z': case 'Z':
         return C_Z;
     case '_':
-        return UNDERSCORE;
+        return C_UNDERSCORE;
     case '|':
-        return PIPE;
+        return C_PIPE;
     case ' ': case '\t': case '\n': case '\r':
-        return SPACE;
+        return C_SPACE;
     case ',':
-        return COMMA;
+        return C_COMMA;
     default:
-        return OTHER;
+        return C_OTHER;
     }
 }
+
 static unsigned long long
 FacronToken_to_mask (FacronToken t)
 {
     switch (t)
     {
-    case FAN_ACCESS_TOK:
+    case T_FAN_ACCESS:
         return FAN_ACCESS;
-    case FAN_MODIFY_TOK:
+    case T_FAN_MODIFY:
         return FAN_MODIFY;
-    case FAN_CLOSE_WRITE_TOK:
+    case T_FAN_CLOSE_WRITE:
         return FAN_CLOSE_WRITE;
-    case FAN_CLOSE_NOWRITE_TOK:
+    case T_FAN_CLOSE_NOWRITE:
         return FAN_CLOSE_NOWRITE;
-    case FAN_OPEN_TOK:
+    case T_FAN_OPEN:
         return FAN_OPEN;
-    case FAN_Q_OVERFLOW_TOK:
+    case T_FAN_Q_OVERFLOW:
         return FAN_Q_OVERFLOW;
-    case FAN_OPEN_PERM_TOK:
+    case T_FAN_OPEN_PERM:
         return FAN_OPEN_PERM;
-    case FAN_ACCESS_PERM_TOK:
+    case T_FAN_ACCESS_PERM:
         return FAN_ACCESS_PERM;
-    case FAN_ONDIR_TOK:
+    case T_FAN_ONDIR:
         return FAN_ONDIR;
-    case FAN_EVENT_ON_CHILD_TOK:
+    case T_FAN_EVENT_ON_CHILD:
         return FAN_EVENT_ON_CHILD;
-    case FAN_CLOSE_TOK:
+    case T_FAN_CLOSE:
         return FAN_CLOSE;
-    case FAN_ALL_EVENTS_TOK:
+    case T_FAN_ALL_EVENTS:
         return FAN_ALL_EVENTS;
-    case FAN_ALL_PERM_EVENTS_TOK:
+    case T_FAN_ALL_PERM_EVENTS:
         return FAN_ALL_PERM_EVENTS;
-    case FAN_ALL_OUTGOING_EVENTS_TOK:
+    case T_FAN_ALL_OUTGOING_EVENTS:
         return FAN_ALL_OUTGOING_EVENTS;
-    case EMPTY:
+    case T_EMPTY:
         return 0;
     default:
         fprintf (stderr, "Warning: unknown token: %d\n", t);
@@ -131,8 +132,7 @@ FacronToken_to_mask (FacronToken t)
     }
 }
 
-
-static const char symbols[ERROR][NB_CHARS] =
+static const char state_transitions_table[ERROR][NB_CHARS] =
 {
           /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |,   ,  ,, ... */
     [_0] = { __, __, __, __, __, F0, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, _0, __, __ },
@@ -269,29 +269,29 @@ static const char symbols[ERROR][NB_CHARS] =
           /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |, \ ,  ,, ... */
 };
 
-FacronState
+FacronResult
 next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask)
 {
-    FacronToken token = EMPTY;
+    FacronState state = EMPTY;
     while (*i < len) /* TODO: check n */
     {
-        FacronToken prev_token = token;
+        FacronState prev_state = state;
         FacronChar c = char_to_FacronChar (line[*i]);
-        token = symbols[token][c];
-        switch (token)
+        state = state_transitions_table[state][c];
+        switch (state)
         {
         case ERROR:
-            return S_ERROR;
+            return R_ERROR;
         case EMPTY:
-            *mask = FacronToken_to_mask (prev_token);
+            *mask = FacronToken_to_mask (prev_state);
             switch (c)
             {
-            case SPACE:
-                return S_END;
-            case COMMA:
-                return S_COMMA;
-            case PIPE:
-                return S_PIPE;
+            case C_SPACE:
+                return R_END;
+            case C_COMMA:
+                return R_COMMA;
+            case C_PIPE:
+                return R_PIPE;
             default:
                 break;
             }
@@ -301,5 +301,5 @@ next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask)
         ++(*i);
     }
 
-    return ERROR;
+    return R_ERROR;
 }

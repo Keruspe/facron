@@ -100,20 +100,20 @@ read_next (FacronConf *previous, FILE *conf)
 
     int n = 0;
     ssize_t i = 0;
-    FacronState state;
+    FacronResult result;
     unsigned long long mask;
-    while ((state = next_token (line, &i, len, &mask))) /* != S_END */
+    while ((result = next_token (line, &i, len, &mask))) /* != S_END */
     {
-        switch (state)
+        switch (result)
         {
-        case S_ERROR:
+        case R_ERROR:
             line[len - 1] = '\0';
             fprintf (stderr, "Error at char %c: \"%s\" not understood\n", line[i], line + i);
             goto fail;
-        case S_COMMA:
+        case R_COMMA:
             entry->mask[n++] |= mask;
             break;
-        case S_PIPE:
+        case R_PIPE:
             entry->mask[n] |= mask;
         default:
             break;

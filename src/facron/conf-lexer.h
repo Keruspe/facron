@@ -156,26 +156,31 @@ typedef enum
     OS, /* T */
     OT, /* S */
     __ /* ERROR */
-} FacronToken;
+} FacronState;
 
 #define EMPTY _0
 #define ERROR __
 
-#define FAN_ACCESS_TOK         A5
-#define FAN_MODIFY_TOK         M5
-#define FAN_CLOSE_WRITE_TOK    W4
-#define FAN_CLOSE_NOWRITE_TOK  N6
-#define FAN_OPEN_TOK           O3
-#define FAN_Q_OVERFLOW_TOK     Q9
-#define FAN_OPEN_PERM_TOK      O8
-#define FAN_ACCESS_PERM_TOK    AA
-#define FAN_ONDIR_TOK          OD
-#define FAN_EVENT_ON_CHILD_TOK ED
-
-#define FAN_CLOSE_TOK               C4
-#define FAN_ALL_EVENTS_TOK          EL
-#define FAN_ALL_PERM_EVENTS_TOK     PA
-#define FAN_ALL_OUTGOING_EVENTS_TOK OT
+typedef enum
+{
+    T_FAN_ACCESS         = A5,
+    T_FAN_MODIFY         = M5,
+    T_FAN_CLOSE_WRITE    = W4,
+    T_FAN_CLOSE_NOWRITE  = N6,
+    T_FAN_OPEN           = O3,
+    T_FAN_Q_OVERFLOW     = Q9,
+    T_FAN_OPEN_PERM      = O8,
+    T_FAN_ACCESS_PERM    = AA,
+    T_FAN_ONDIR          = OD,
+    T_FAN_EVENT_ON_CHILD = ED,
+    /* aliases */
+    T_FAN_CLOSE               = C4,
+    T_FAN_ALL_EVENTS          = EL,
+    T_FAN_ALL_PERM_EVENTS     = PA,
+    T_FAN_ALL_OUTGOING_EVENTS = OT,
+    /* special case */
+    T_EMPTY = EMPTY
+} FacronToken;
 
 typedef enum
 {
@@ -205,22 +210,22 @@ typedef enum
     C_X,
     C_Y,
     C_Z,
-    UNDERSCORE,
-    PIPE,
-    SPACE,
-    COMMA,
-    OTHER,
+    C_UNDERSCORE,
+    C_PIPE,
+    C_SPACE,
+    C_COMMA,
+    C_OTHER,
     NB_CHARS
 } FacronChar;
 
 typedef enum
 {
-    S_END,
-    S_ERROR,
-    S_PIPE,
-    S_COMMA
-} FacronState;
+    R_END,
+    R_ERROR,
+    R_PIPE,
+    R_COMMA
+} FacronResult;
 
-FacronState next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask);
+FacronResult next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask);
 
 #endif /* __FACRON_CONF_LEXER_H__ */
