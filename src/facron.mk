@@ -23,8 +23,8 @@ bin_facron_SOURCES = \
 	src/facron/facron.c \
 	src/facron/conf.h \
 	src/facron/conf.c \
-	src/facron/conf-lexer.h \
-	src/facron/conf-lexer.c \
+	src/facron/facron-lexer.h \
+	src/facron/facron-lexer.c \
 	src/facron/conf-parser.h \
 	src/facron/conf-parser.c \
 	$(NULL)

@@ -20,7 +20,10 @@
 #ifndef __FACRON_CONF_LEXER_H__
 #define __FACRON_CONF_LEXER_H__
 
+#include <stdbool.h>
 #include <stdio.h>
+
+typedef struct FacronLexer FacronLexer;
 
 typedef enum
 {
@@ -226,6 +229,13 @@ typedef enum
     R_COMMA
 } FacronResult;
 
-FacronResult next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask);
+bool  facron_lexer_read_line    (FacronLexer *lexer);
+bool  facron_lexer_invalid_line (FacronLexer *lexer);
+bool  facron_lexer_end_of_line  (FacronLexer *lexer);
+char *facron_lexer_read_string  (FacronLexer *lexer);
+void  facron_lexer_skip_spaces  (FacronLexer *lexer);
+
+FacronResult facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask);
+FacronLexer *facron_lexer_new        (void);
 
 #endif /* __FACRON_CONF_LEXER_H__ */

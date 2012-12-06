@@ -19,7 +19,19 @@
 
 #include "conf-lexer.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <linux/fanotify.h>
+
+struct FacronLexer
+{
+    FILE *file;
+    char *line;
+    char *line_beg;
+    ssize_t len;
+    ssize_t index;
+};
 
 static FacronChar
 char_to_FacronChar (char c)
@@ -269,24 +281,104 @@ static const char state_transitions_table[ERROR][NB_CHARS] =
           /*  A,  B,  C,  D,  E,  F,  G,  H,  I,  J,  K,  L,  M,  N,  O,  P,  Q,  R,  S,  T,  U,  V,  W,  X,  Y,  Z,  _,  |, \ ,  ,, ... */
 };
 
-FacronResult
-next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask)
+static inline bool
+is_space (char c)
 {
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+}
+
+bool
+facron_lexer_read_line (FacronLexer *lexer)
+{
+    if (lexer->line_beg)
+        free (lexer->line_beg);
+
+    size_t dummy_len = 0;
+
+    lexer->len = getline (&lexer->line, &dummy_len, lexer->file);
+    lexer->line_beg = lexer->line;
+    lexer->index = 0;
+
+    return (lexer->len >= 1);
+}
+
+bool
+facron_lexer_invalid_line (FacronLexer *lexer)
+{
+    return (lexer->line == NULL || is_space (lexer->line[0]));
+}
+
+bool
+facron_lexer_end_of_line (FacronLexer *lexer)
+{
+    return (lexer->len == 0); /* TODO: check index */
+}
+
+char *
+facron_lexer_read_string (FacronLexer *lexer)
+{
+    if (lexer->line == NULL)
+        return NULL;
+
+    char delim = (lexer->line[0] == '"' || lexer->line[0] == '\'') ? lexer->line[0] : '\0';
+    if (delim != '\0')
+    {
+        ++lexer->line;
+        --lexer->len;
+    }
+
+    const char *line_beg = lexer->line;
+
+    while (0 < lexer->len &&
+           ((delim == '\0' && !is_space (lexer->line[0])) ||
+           (delim != '\0' && lexer->line[0] != delim)))
+    {
+        ++lexer->line;
+        --lexer->len;
+    }
+    lexer->line[0] = '\0';
+    ++lexer->line;
+    --lexer->len;
+
+    return strdup (line_beg);
+}
+
+void
+facron_lexer_skip_spaces (FacronLexer *lexer)
+{
+    while (is_space (lexer->line[0]))
+    {
+        ++lexer->line;
+        --lexer->len;
+    }
+}
+
+FacronResult
+facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
+{
+    if (lexer->line == NULL)
+        return R_ERROR;
+
     FacronState state = EMPTY;
-    while (*i < len) /* TODO: check n */
+    while (lexer->index < lexer->len) /* TODO: check n */
     {
         FacronState prev_state = state;
-        FacronChar c = char_to_FacronChar (line[*i]);
+        FacronChar c = char_to_FacronChar (lexer->line[lexer->index]);
         state = state_transitions_table[state][c];
         switch (state)
         {
         case ERROR:
+            lexer->line[lexer->len - 1] = '\0';
+            fprintf (stderr, "Error at char %c: \"%s\" not understood\n", lexer->line[lexer->index], lexer->line + lexer->index);
             return R_ERROR;
         case EMPTY:
             *mask = FacronToken_to_mask (prev_state);
             switch (c)
             {
             case C_SPACE:
+                lexer->line += (lexer->index + 1);
+                lexer->len -= (lexer->index + 1);
+                lexer->index = 0;
                 return R_END;
             case C_COMMA:
                 return R_COMMA;
@@ -298,8 +390,24 @@ next_token (const char *line, ssize_t *i, ssize_t len, unsigned long long *mask)
         default:
             break;
         }
-        ++(*i);
+        ++lexer->index;
     }
 
     return R_ERROR;
+}
+
+FacronLexer *
+facron_lexer_new (void)
+{
+    FILE *conf = fopen (SYSCONFDIR "facron.conf", "ro");
+
+    if (!conf)
+        return NULL;
+
+    FacronLexer *lexer = (FacronLexer *) malloc (sizeof (FacronLexer));
+
+    lexer->file = conf;
+    lexer->line = lexer->line_beg = NULL;
+
+    return lexer;
 }

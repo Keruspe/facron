@@ -23,8 +23,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 	$(NULL)
 
 AM_CFLAGS = \
-	-DFACRON_COMPILATION \
-	-DLOCALEDIR=\"$(localedir)\" \
+	-DSYSCONFDIR=\"$(sysconfdir)\" \
 	$(NULL)
 
 AM_LIBS = \
