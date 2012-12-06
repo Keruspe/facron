@@ -20,6 +20,7 @@
 #ifndef __FACRON_CONF_PARSER_H__
 #define __FACRON_CONF_PARSER_H__
 
+typedef struct FacronParser FacronParser;
 typedef struct FacronConfEntry FacronConfEntry;
 
 struct FacronConfEntry

@@ -25,6 +25,10 @@
 #include <string.h>
 #include <unistd.h>
 
+struct FacronParser
+{
+};
+
 static inline char *
 basename (const char *filename)
 {
