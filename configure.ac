@@ -16,10 +16,7 @@
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.69])
-AC_INIT([facron],[0.1],[Marc-Antoine@Perennou.com])
-
-INTLTOOL_REQUIRED="0.50.0"
-PKGCONFIG_REQUIRED="0.22"
+AC_INIT([facron],[0.9],[Marc-Antoine@Perennou.com])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/])
@@ -27,10 +24,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_PREFIX_DEFAULT([/usr])
 AC_USE_SYSTEM_EXTENSIONS
-
-AM_PROG_AR
-LT_PREREQ([2.2.6])
-LT_INIT([disable-static pic-only])
 
 AM_INIT_AUTOMAKE([1.12 subdir-objects check-news foreign no-dist-gzip dist-xz tar-ustar -Wall])
 AM_SILENT_RULES([yes])
@@ -45,9 +38,6 @@ AM_PROG_CC_C_O
 
 AC_CHECK_HEADER_STDBOOL
 AC_SYS_LARGEFILE
-
-CC_ATTRIBUTE_UNUSED
-CC_ATTRIBUTE_VISIBILITY([default])
 
 CC_CHECK_CFLAGS_APPEND([ \
                          -pipe \
@@ -94,23 +84,8 @@ CC_CHECK_LDFLAGS_APPEND([ \
                           -Wl,--gc-sections \
                         ])
 
-AC_DEFINE_UNQUOTED([INDENTERPRETOR_VISIBLE], [__attribute__((visibility("default")))], [Export symbol])
-AC_DEFINE_UNQUOTED([INDENTERPRETOR_UNUSED], [__attribute__((unused))], [Var is unused])
-AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [$GLIB_API_REQUIRED], [The lower GLib API version supported])
-AC_DEFINE_UNQUOTED([GLIB_VERSION_MAX_ALLOWED], [$GLIB_API_REQUIRED], [The higher GLib API version supported])
-AC_DEFINE_UNQUOTED([GDK_VERSION_MIN_REQUIRED], [$GDK_API_REQUIRED], [The lower Gdk API version supported])
-AC_DEFINE_UNQUOTED([GDK_VERSION_MAX_ALLOWED], [$GDK_API_REQUIRED], [The higher Gdk API version supported])
-
-GETTEXT_PACKAGE=$PACKAGE_NAME
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
-AC_SUBST(GETTEXT_PACKAGE)
-IT_PROG_INTLTOOL([$INTLTOOL_REQUIRED])
-
-PKG_PROG_PKG_CONFIG([$PKGCONFIG_REQUIRED])
-
 AC_CONFIG_FILES([
     Makefile
-    po/Makefile.in
 ])
 AC_OUTPUT
 AC_MSG_RESULT([

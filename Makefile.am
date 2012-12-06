@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = po
-
 ACLOCAL_AMFLAGS  = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 AM_DISTCHECK_CONFIGURE_FLAGS = \
