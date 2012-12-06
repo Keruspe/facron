@@ -27,6 +27,7 @@
 
 struct FacronParser
 {
+    int dummy;
 };
 
 static inline char *
@@ -51,8 +52,8 @@ is_space (char c)
     return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
-static FacronConfEntry *
-read_next (FacronConfEntry *previous, FILE *conf)
+FacronConf *
+read_next (FacronConf *previous, FILE *conf)
 {
     size_t dummy_len = 0;
     ssize_t len;
@@ -93,7 +94,7 @@ read_next (FacronConfEntry *previous, FILE *conf)
         goto fail_early;
     }
 
-    FacronConfEntry *entry = (FacronConfEntry *) calloc (1, sizeof (FacronConfEntry));
+    FacronConf *entry = (FacronConf *) calloc (1, sizeof (FacronConf));
     entry->path = strdup (line_beg);
     entry->next = previous;
 
@@ -180,38 +181,4 @@ fail:
 fail_early:
     free (line_beg);
     return read_next (previous, conf);
-}
-
-FacronConfEntry *
-load_conf (void)
-{
-    FILE *conf_file = fopen ("/etc/facron.conf", "r");
-
-    if (!conf_file)
-    {
-        fprintf (stderr, "Error: could not load configuration file, does \"/etc/facron.conf\" exist?\n");
-        return NULL;
-    }
-
-    fprintf (stderr, "Notice: loading configuration\n");
-
-    FacronConfEntry *conf = NULL;
-    for (FacronConfEntry *entry; (entry = read_next (conf, conf_file)); conf = entry);
-
-    fclose (conf_file);
-    return conf;
-}
-
-void
-unload_conf (FacronConfEntry *conf)
-{
-    while (conf)
-    {
-        free (conf-> path);
-        for (int i = 0; i < 512 && conf->command[i]; ++i)
-            free (conf->command[i]);
-        FacronConfEntry *old = conf;
-        conf = conf->next;
-        free (old);
-    }
 }

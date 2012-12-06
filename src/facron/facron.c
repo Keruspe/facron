@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include "conf-parser.h"
+#include "conf.h"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -34,7 +34,7 @@
 #include <linux/limits.h>
 
 static int fanotify_fd;
-static FacronConfEntry *_conf = NULL;
+static FacronConf *_conf = NULL;
 
 typedef struct fanotify_event_metadata FacronMetadata;
 
@@ -60,7 +60,7 @@ walk_conf (FacronAction action)
         break;
     }
 
-    for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
+    for (FacronConf *entry = _conf; entry; entry = entry->next)
     {
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
@@ -157,7 +157,7 @@ main (void)
                 goto next;
             path[path_len] = '\0';
 
-            for (FacronConfEntry *entry = _conf; entry; entry = entry->next)
+            for (FacronConf *entry = _conf; entry; entry = entry->next)
             {
                 if (!strcmp (path, entry->path))
                 {

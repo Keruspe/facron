@@ -17,15 +17,20 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __FACRON_CONF_PARSER_H__
-#define __FACRON_CONF_PARSER_H__
+#ifndef __FACRON_CONF_H__
+#define __FACRON_CONF_H__
 
-#include "conf.h"
+typedef struct FacronConf FacronConf;
 
-#include <stdio.h>
+struct FacronConf
+{
+    char *path; /* TODO: mono-malloc */
+    unsigned long long mask[512];
+    char *command[512];
+    FacronConf *next;
+};
 
-typedef struct FacronParser FacronParser;
+FacronConf *load_conf (void);
+void      unload_conf (FacronConf *conf);
 
-FacronConf *read_next (FacronConf *previous, FILE *conf);
-    
-#endif /* __FACRON_CONF_PARSER_H_ */
+#endif /* __FACRON_CONF_H_ */
