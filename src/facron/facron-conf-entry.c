@@ -19,6 +19,19 @@
 
 #include "facron-conf-entry.h"
 
+#include <stdlib.h>
+
+void
+facron_conf_entry_free (FacronConfEntry *entry)
+{
+    free (entry->path);
+    for (int i = 0; i < 512 && entry->command[i]; ++i)
+        free (entry->command[i]);
+    if (entry->next)
+        facron_conf_entry_free (entry->next);
+    free (entry);
+}
+
 FacronConfEntry *
 facron_conf_entry_new (FacronConfEntry *next, char *path)
 {

@@ -136,17 +136,18 @@ fail_early:
     return facron_parser_parse_entry (parser);
 }
 
+bool
+facron_parser_reload (FacronParser *parser)
+{
+    return facron_lexer_reload_conf (parser->lexer);
+}
+
 FacronParser *
 facron_parser_new (void)
 {
-    FacronLexer *lexer = facron_lexer_new ();
-
-    if (!lexer)
-        return NULL;
-
     FacronParser *parser = (FacronParser *) malloc (sizeof (FacronParser));
 
-    parser->lexer = lexer;
+    parser->lexer = facron_lexer_new ();
     parser->previous_entry = NULL;
 
     return parser;

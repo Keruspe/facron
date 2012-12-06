@@ -21,8 +21,8 @@ bin_PROGRAMS += \
 
 bin_facron_SOURCES = \
 	src/facron/facron.c \
-	src/facron/conf.h \
-	src/facron/conf.c \
+	src/facron/facron-conf.h \
+	src/facron/facron-conf.c \
 	src/facron/facron-conf-entry.h \
 	src/facron/facron-conf-entry.c \
 	src/facron/facron-lexer.h \

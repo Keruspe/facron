@@ -18,7 +18,8 @@
  */
 
 #include "config.h"
-#include "conf.h"
+#include "facron-conf.h"
+#include "facron-conf-entry.h"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -60,7 +61,7 @@ walk_conf (FacronAction action)
         break;
     }
 
-    for (FacronConf *entry = _conf; entry; entry = entry->next)
+    for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
     {
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
@@ -74,7 +75,6 @@ walk_conf (FacronAction action)
 static inline void
 apply_conf (void)
 {
-    _conf = load_conf ();
     walk_conf (ADD);
 }
 
@@ -82,14 +82,16 @@ static inline void
 unapply_conf (void)
 {
     walk_conf (REMOVE);
-    unload_conf (_conf);
 }
 
 static inline void
 reapply_conf (void)
 {
-    unapply_conf ();
-    apply_conf ();
+    if (facron_conf_reload (_conf))
+    {
+        unapply_conf ();
+        apply_conf ();
+    }
 }
 
 static inline void
@@ -157,7 +159,7 @@ main (void)
                 goto next;
             path[path_len] = '\0';
 
-            for (FacronConf *entry = _conf; entry; entry = entry->next)
+            for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
             {
                 if (!strcmp (path, entry->path))
                 {

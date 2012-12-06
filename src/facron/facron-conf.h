@@ -17,41 +17,19 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "conf.h"
+#ifndef __FACRON_CONF_H__
+#define __FACRON_CONF_H__
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "facron-conf-entry.h"
 
-FacronConf *
-load_conf (void)
-{
-    FILE *conf_file = fopen ("/etc/facron.conf", "r");
+#include <stdbool.h>
 
-    if (!conf_file)
-    {
-        fprintf (stderr, "Error: could not load configuration file, does \"/etc/facron.conf\" exist?\n");
-        return NULL;
-    }
+typedef struct FacronConf FacronConf;
 
-    fprintf (stderr, "Notice: loading configuration\n");
+bool facron_conf_reload (FacronConf *conf);
 
-    FacronConf *conf = NULL;
-    for (FacronConf *entry; (entry = read_next (conf, conf_file)); conf = entry);
+const FacronConfEntry *facron_conf_get_entries (FacronConf *conf);
 
-    fclose (conf_file);
-    return conf;
-}
+FacronConf *facron_conf_new (void);
 
-void
-unload_conf (FacronConf *conf)
-{
-    while (conf)
-    {
-        free (conf-> path);
-        for (int i = 0; i < 512 && conf->command[i]; ++i)
-            free (conf->command[i]);
-        FacronConf *old = conf;
-        conf = conf->next;
-        free (old);
-    }
-}
+#endif /* __FACRON_CONF_H_ */

@@ -20,11 +20,13 @@
 #ifndef __FACRON_CONF_PARSER_H__
 #define __FACRON_CONF_PARSER_H__
 
-#include "conf.h"
+#include "facron-conf.h"
 
 typedef struct FacronParser FacronParser;
 
-FacronConf *facron_parser_parse_entry (FacronParser *parser);
+FacronConfEntry *facron_parser_parse_entry (FacronParser *parser);
+
+bool facron_parser_reload (FacronParser *parser);
 
 FacronParser *facron_parser_new (void);
     

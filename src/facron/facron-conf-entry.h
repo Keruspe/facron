@@ -30,6 +30,8 @@ struct FacronConfEntry
     char *command[512];
 };
 
+void facron_conf_entry_free (FacronConfEntry *entry);
+
 FacronConfEntry *facron_conf_entry_new (FacronConfEntry *next, char *path);
 
 #endif /* __FACRON_CONF_ENTRY_H_ */

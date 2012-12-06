@@ -396,18 +396,31 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
     return R_ERROR;
 }
 
+bool
+facron_lexer_reload_conf (FacronLexer *lexer)
+{
+    if (lexer->file)
+        fclose (lexer->file);
+
+    lexer->file = fopen (SYSCONFDIR "facron.conf", "ro");
+    lexer->line = lexer->line_beg = NULL;
+
+    if (!lexer->file)
+    {
+        fprintf (stderr, "Error: could not load configuration file, does " SYSCONFDIR "\"facron.conf\" exist?\n");
+        return false;
+    }
+
+    return true;
+}
+
 FacronLexer *
 facron_lexer_new (void)
 {
-    FILE *conf = fopen (SYSCONFDIR "facron.conf", "ro");
-
-    if (!conf)
-        return NULL;
-
     FacronLexer *lexer = (FacronLexer *) malloc (sizeof (FacronLexer));
 
-    lexer->file = conf;
-    lexer->line = lexer->line_beg = NULL;
+    lexer->file = NULL;
+    facron_lexer_reload_conf (lexer); /* TODO: check return value */
 
     return lexer;
 }
