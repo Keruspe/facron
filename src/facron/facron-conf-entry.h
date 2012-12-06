@@ -20,6 +20,8 @@
 #ifndef __FACRON_CONF_ENTRY_H__
 #define __FACRON_CONF_ENTRY_H__
 
+#include <stdbool.h>
+
 typedef struct FacronConfEntry FacronConfEntry;
 
 struct FacronConfEntry
@@ -30,7 +32,7 @@ struct FacronConfEntry
     char *command[512];
 };
 
-void facron_conf_entry_free (FacronConfEntry *entry);
+void facron_conf_entry_free (FacronConfEntry *entry, bool follow);
 
 FacronConfEntry *facron_conf_entry_new (FacronConfEntry *next, char *path);
 

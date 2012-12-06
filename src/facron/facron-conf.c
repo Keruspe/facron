@@ -50,7 +50,7 @@ facron_conf_reload (FacronConf *conf)
         return false;
     }
     if (entries)
-        facron_conf_entry_free (entries);
+        facron_conf_entry_free (entries, true);
     return true;
 }
 
@@ -64,7 +64,7 @@ void
 facron_conf_free (FacronConf *conf)
 {
     if (conf->entries)
-        facron_conf_entry_free (conf->entries);
+        facron_conf_entry_free (conf->entries, true);
     facron_parser_free (conf->parser);
     free (conf);
 }

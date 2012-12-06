@@ -22,13 +22,13 @@
 #include <stdlib.h>
 
 void
-facron_conf_entry_free (FacronConfEntry *entry)
+facron_conf_entry_free (FacronConfEntry *entry, bool follow)
 {
     free (entry->path);
     for (int i = 0; i < 512 && entry->command[i]; ++i)
         free (entry->command[i]);
-    if (entry->next)
-        facron_conf_entry_free (entry->next);
+    if (follow && entry->next)
+        facron_conf_entry_free (entry->next, true);
     free (entry);
 }
 
