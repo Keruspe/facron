@@ -1,3 +1,4 @@
 Makefile
 bin
 facron-*
+data/systemd/facron.service
