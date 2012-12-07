@@ -33,7 +33,8 @@ struct FacronParser
 static inline char *
 basename (const char *filename)
 {
-    return strdup (strrchr (filename, '/') + 1);
+    char *basename = strrchr (filename, '/');
+    return strdup (basename ? basename + 1 : filename);
 }
 
 static inline char *
