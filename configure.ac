@@ -18,6 +18,8 @@
 AC_PREREQ([2.69])
 AC_INIT([facron],[0.9],[Marc-Antoine@Perennou.com])
 
+PKGCONFIG_REQUIRED="0.22"
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([m4])
@@ -84,8 +86,24 @@ CC_CHECK_LDFLAGS_APPEND([ \
                           -Wl,--gc-sections \
                         ])
 
+PKG_PROG_PKG_CONFIG([$PKGCONFIG_REQUIRED])
+
+AC_ARG_WITH([systemdsystemunitdir],
+AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+    [],
+    [
+    PKG_CHECK_EXISTS([systemd],
+      [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)],
+      [with_systemdsystemunitdir=no])
+    ])
+if test "x$with_systemdsystemunitdir" != xno; then
+   AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
+
 AC_CONFIG_FILES([
     Makefile
+    data/systemd/facron.service
 ])
 AC_OUTPUT
 AC_MSG_RESULT([

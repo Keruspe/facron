@@ -1,0 +1,12 @@
+# Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+# Distributed under the termes of the GNU Geneal Public License v3
+
+[Unit]
+Description=fanotify cron system
+
+[Service]
+ExecStart=@sbindir@/facron
+ExecReload=kill -USR1 $MAINPID
+
+[Install]
+WantedBy=nova.target
