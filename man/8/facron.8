@@ -36,7 +36,7 @@ You can put as much entries as you want in this file, one entry per line.
 
 Each line must be formatted like this:
 
-<file path> <fanotify masks> <command>
+    <file path> <fanotify masks> <command>
 
 Each time an event matching the fanotify masks i sent regarding the file path given
 the command is launched
@@ -60,7 +60,7 @@ The fanotify masks available are:
 
 If you configure your fanotify masks like this:
 
-FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
+    FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
 
 The event caught will be: either FAN_MODIFY AND FAN_CLOSE_WRITE, or FAN_OPEN
 
@@ -74,4 +74,6 @@ Three special arguments are available:
     $# corresponds to the basename of your file
     $$ corresponds to the full path of your file
 
+You can reload the configuration at any time by sending a SIGUSR1 to facron:
 
+    kill -USR1 $(pidof facron)

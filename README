@@ -38,14 +38,19 @@ The fanotify masks available are:
     FAN_ALL_OUTGOING_EVENTS
 
 If you configure your fanotify masks like this:
-FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
+
+    FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
+
 The event caught will be: either FAN_MODIFY AND FAN_CLOSE_WRITE, or FAN_OPEN
 
 The command should be an absolute path. You can pass it arguments.
 If any of your arguments contain sapces, you can surrond it with quotes or double quotes.
 Three special arguments are available:
-$@ corresponds to the dirname of your file
-$# corresponds to the basename of your file
-$$ corresponds to the full path of your file
 
+    $@ corresponds to the dirname of your file
+    $# corresponds to the basename of your file
+    $$ corresponds to the full path of your file
 
+You can reload the configuration at any time by sending a SIGUSR1 to facron:
+
+    kill -USR1 $(pidof facron)
