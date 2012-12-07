@@ -26,6 +26,10 @@ if HAVE_SYSTEMD
 systemdsystemunit_DATA = \
 	data/systemd/facron.service \
 	$(NULL)
+
+CLEANFILES += \
+	$(systemdsystemunit_DATA) \
+	$(NULL)
 endif
 
 EXTRA_DIST += \
