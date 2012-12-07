@@ -46,6 +46,7 @@ noinst_LTLIBRARIES = $(NULL)
 
 include src/facron.mk
 include man/8.mk
+include data/systemd.mk
 
 # Maintainance stuff
 
