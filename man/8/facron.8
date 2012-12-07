@@ -31,7 +31,9 @@ facron is a tool to watch your filesystem's changes and react to events.
 
 .SH "CONFIGURATION"
 facron configuration file is "/etc/facron.conf".
+
 You can put as much entries as you want in this file, one entry per line.
+
 Each line must be formatted like this:
 
 <file path> <fanotify masks> <command>
@@ -57,14 +59,19 @@ The fanotify masks available are:
     FAN_ALL_OUTGOING_EVENTS
 
 If you configure your fanotify masks like this:
+
 FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
+
 The event caught will be: either FAN_MODIFY AND FAN_CLOSE_WRITE, or FAN_OPEN
 
 The command should be an absolute path. You can pass it arguments.
+
 If any of your arguments contain sapces, you can surrond it with quotes or double quotes.
+
 Three special arguments are available:
-$@ corresponds to the dirname of your file
-$# corresponds to the basename of your file
-$$ corresponds to the full path of your file
+
+    $@ corresponds to the dirname of your file
+    $# corresponds to the basename of your file
+    $$ corresponds to the full path of your file
 
 
