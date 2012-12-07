@@ -17,11 +17,14 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #include "facron-conf-entry.h"
 #include "facron-lexer.h"
 #include "facron-parser.h"
 
+#define basename
 #include <string.h>
+#undef basename
 #include <unistd.h>
 
 struct FacronParser
@@ -33,18 +36,35 @@ struct FacronParser
 static inline char *
 basename (const char *filename)
 {
-    char *basename = strrchr (filename, '/');
-    return strdup (basename ? basename + 1 : filename);
+    char *bn = strrchr (filename, '/');
+    return strdup (bn ? bn + 1 : filename);
+}
+
+static inline char *
+substr (const char *str, size_t len)
+{
+    return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
 }
 
 static inline char *
 dirname (const char *filename)
 {
     char *c = strrchr (filename, '/');
+    if (!c)
+        return strdup (".");
+
+    if (c[1] == '\0')
+    {
+        while (c != filename && c[-1] == '/')
+            --c;
+        c = memrchr (filename, '/', c - filename);
+    }
+
     while (c != filename && c[-1] == '/')
         --c;
-    return (c == filename) ? strdup (".") :
-                            (char *) memcpy (calloc (c - filename + 1, sizeof (char)), filename, c - filename);
+    return (c != filename) ? substr (filename, c - filename) :
+                             (filename[1] == '/') ? strdup ("//") :
+                                                    strdup ("/");
 }
 
 FacronConfEntry *
