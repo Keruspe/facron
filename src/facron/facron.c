@@ -128,6 +128,8 @@ usage (char *callee)
 int
 main (int argc, char *argv[])
 {
+    bool background = false;
+
     switch (argc)
     {
     case 1:
@@ -135,13 +137,25 @@ main (int argc, char *argv[])
     case 2:
         if (strcmp (argv[1], "--background"))
             usage (argv[0]);
-        pid_t p = fork ();
-        if (p)
-            waitpid (p, NULL, 0);
-        else if (fork ())
-            return EXIT_SUCCESS;
+        background = true;
+        break;
     default:
         usage (argv[0]);
+    }
+
+    if (background)
+    {
+        pid_t p = fork ();
+        if (p)
+        {
+            waitpid (p, NULL, 0);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            if (fork ())
+                return EXIT_SUCCESS;
+        }
     }
 
     signal (SIGTERM, &signal_handler);
