@@ -103,7 +103,6 @@ AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_sy
 
 AC_CONFIG_FILES([
     Makefile
-    data/systemd/facron.service
 ])
 AC_OUTPUT
 AC_MSG_RESULT([

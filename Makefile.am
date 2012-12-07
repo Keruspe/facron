@@ -36,7 +36,7 @@ EXTRA_DIST = \
 CLEANFILES = $(NULL)
 SUFFIXES = $(NULL)
 
-bin_PROGRAMS = $(NULL)
+sbin_PROGRAMS = $(NULL)
 pkginclude_HEADERS = $(NULL)
 pkglibexec_PROGRAMS = $(NULL)
 lib_LTLIBRARIES = $(NULL)

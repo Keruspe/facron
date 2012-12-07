@@ -15,6 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
+SUFFIXES += .service.in .service
+.service.in.service:
+	@ $(MKDIR_P) data/systemd
+	$(AM_V_GEN) $(SED) \
+	    -e 's,[@]sbindir[@],$(sbindir),g' \
+	    < $< > $@
+
 if HAVE_SYSTEMD
 systemdsystemunit_DATA = \
 	data/systemd/facron.service \

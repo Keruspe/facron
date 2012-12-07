@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
-bin_PROGRAMS += \
-	bin/facron \
+sbin_PROGRAMS += \
+	sbin/facron \
 	$(NULL)
 
-bin_facron_SOURCES = \
+sbin_facron_SOURCES = \
 	src/facron/facron.c \
 	src/facron/facron-conf.h \
 	src/facron/facron-conf.c \
@@ -31,9 +31,9 @@ bin_facron_SOURCES = \
 	src/facron/facron-parser.c \
 	$(NULL)
 
-bin_facron_CFLAGS = \
+sbin_facron_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(NULL)
 
-bin_facron_LDADD = \
+sbin_facron_LDADD = \
 	$(NULL)
