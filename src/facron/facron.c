@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <sys/fanotify.h>
+#include <sys/wait.h>
 
 #include <linux/fanotify.h>
 #include <linux/limits.h>
@@ -117,9 +118,32 @@ signal_handler (int signum)
     }
 }
 
-int
-main (void)
+static inline void
+usage (char *callee)
 {
+    fprintf (stderr, "USAGE: %s [--background]", callee);
+    exit (EXIT_FAILURE);
+}
+
+int
+main (int argc, char *argv[])
+{
+    switch (argc)
+    {
+    case 1:
+        break;
+    case 2:
+        if (strcmp (argv[1], "--background"))
+            usage (argv[0]);
+        pid_t p = fork ();
+        if (p)
+            waitpid (p, NULL, 0);
+        else if (fork ())
+            return EXIT_SUCCESS;
+    default:
+        usage (argv[0]);
+    }
+
     signal (SIGTERM, &signal_handler);
     signal (SIGINT, &signal_handler);
     signal (SIGUSR1, &signal_handler);
