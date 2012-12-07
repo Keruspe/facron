@@ -16,6 +16,6 @@
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
 dist_man_MANS = \
-	man/1/facron.1 \
+	man/8/facron.8 \
 	$(NULL)
 
