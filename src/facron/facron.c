@@ -125,6 +125,67 @@ usage (char *callee)
     exit (EXIT_FAILURE);
 }
 
+static inline char *
+print_number (unsigned int n)
+{
+    char *tmp = NULL;
+    if (asprintf (&tmp, "%u", n) < 1)
+        return strdup ("0");
+    return tmp;
+}
+
+typedef struct CommandBackup CommandBackup;
+struct CommandBackup
+{
+    int index;
+    char *field;
+    CommandBackup *next;
+};
+
+static void
+exec_command (char *command[512])
+{
+    static unsigned int count = 0;
+
+    CommandBackup *backup = NULL;
+    for (unsigned int i = 0; i < 512 && command[i]; ++i)
+    {
+        char *field = command[i];
+        bool subst = false;
+        if (!strcmp ("$+", field))
+        {
+            ++count;
+            subst = true;
+        }
+        else if (!strcmp ("$-", field))
+        {
+            --count;
+            subst = true;
+        }
+        else if (!strcmp ("$=", field))
+            subst = true;
+
+        if (subst)
+        {
+            CommandBackup *b = (CommandBackup *) malloc (sizeof (CommandBackup));
+            b->index = i;
+            b->field = field;
+            b->next = backup;
+            backup = b;
+            command[i] = print_number (count);
+        }
+    }
+    
+    if (!fork ())
+        execv (command[0], command);
+
+    for (CommandBackup *next; backup != NULL; next = backup->next, free (backup), backup = next)
+    {
+        free (command[backup->index]);
+        command[backup->index] = backup->field;
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -204,10 +265,7 @@ main (int argc, char *argv[])
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & metadata->mask) == entry->mask[i])
-                        {
-                            if (!fork ())
-                                execv (entry->command[0], entry->command);
-                        }
+                            exec_command ((char **) entry->command);
                     }
                 }
             }
