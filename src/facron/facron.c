@@ -177,7 +177,10 @@ exec_command (char *command[512])
     }
     
     if (!fork ())
-        execv (command[0], command);
+    {
+        if (!fork ())
+            execv (command[0], command);
+    }
 
     for (CommandBackup *next; backup != NULL; next = backup->next, free (backup), backup = next)
     {
