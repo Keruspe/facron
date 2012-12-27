@@ -179,8 +179,13 @@ exec_command (char *command[512])
     pid_t p = fork ();
     if (p)
         waitpid (p, NULL, 0);
-    else if (!fork ())
-        execv (command[0], command);
+    else
+    {
+        if (fork ())
+            exit (EXIT_SUCCESS);
+        else
+            execv (command[0], command);
+    }
 
     for (CommandBackup *next; backup != NULL; next = backup->next, free (backup), backup = next)
     {
