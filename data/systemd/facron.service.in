@@ -9,4 +9,4 @@ ExecStart=@sbindir@/facron
 ExecReload=/bin/kill -USR1 $MAINPID
 
 [Install]
-WantedBy=nova.target
+WantedBy=default.target
