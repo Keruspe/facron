@@ -24,7 +24,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define basename
 #include <string.h>
+#undef basename
 #include <unistd.h>
 
 #include <sys/fanotify.h>
@@ -142,8 +144,43 @@ struct CommandBackup
     CommandBackup *next;
 };
 
+static inline char *
+basename (const char *filename)
+{
+    char *bn = strrchr (filename, '/');
+    return strdup (bn ? bn + 1 : filename);
+}
+
+static inline char *
+substr (const char *str, size_t len)
+{
+    return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
+}
+
+static inline char *
+dirname (const char *filename)
+{
+    char *c = strrchr (filename, '/');
+    if (!c)
+        return strdup (".");
+
+    if (c[1] == '\0')
+    {
+        while (c != filename && c[-1] == '/')
+            --c;
+        c = memrchr (filename, '/', c - filename);
+    }
+
+    while (c != filename && c[-1] == '/')
+        --c;
+    return (c != filename) ? substr (filename, c - filename) :
+                             (filename[1] == '/') ? strdup ("//") :
+                                                    strdup ("/");
+}
+
 static void
-exec_command (char *command[512])
+exec_command (char       *command[512],
+              const char *path)
 {
     static unsigned int count = 0;
 
@@ -151,19 +188,20 @@ exec_command (char *command[512])
     for (unsigned int i = 0; i < 512 && command[i]; ++i)
     {
         char *field = command[i];
-        bool subst = false;
-        if (!strcmp ("$+", field))
-        {
-            ++count;
-            subst = true;
-        }
+        char *subst = NULL;
+
+        if (!strcmp ("$$", field))
+            subst = strdup (path);
+        else if (!strcmp ("$@", field))
+            subst = dirname (path);
+        else if (!strcmp ("$#", field))
+            subst = basename (path);
+        else if (!strcmp ("$+", field))
+            subst = print_number (++count);
         else if (!strcmp ("$-", field))
-        {
-            --count;
-            subst = true;
-        }
+            subst = print_number (--count);
         else if (!strcmp ("$=", field))
-            subst = true;
+            subst = print_number (count);
 
         if (subst)
         {
@@ -172,7 +210,7 @@ exec_command (char *command[512])
             b->field = field;
             b->next = backup;
             backup = b;
-            command[i] = print_number (count);
+            command[i] = subst;
         }
     }
    
@@ -273,7 +311,7 @@ main (int argc, char *argv[])
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & metadata->mask) == entry->mask[i])
-                            exec_command ((char **) entry->command);
+                            exec_command ((char **) entry->command, path);
                     }
                 }
                 else
@@ -282,11 +320,11 @@ main (int argc, char *argv[])
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & FAN_EVENT_ON_CHILD) &&
-                            path_len >= plen &&
-                            entry->path[plen - 1] == '/' || path[plen] == '/' &&
+                            (size_t)path_len >= plen &&
+                            (entry->path[plen - 1] == '/' || path[plen] == '/') &&
                             !memcmp (entry->path, path, plen) &&
                             (entry->mask[i] & metadata->mask) == (entry->mask[i] & ~FAN_EVENT_ON_CHILD))
-                                exec_command ((char **) entry->command);
+                                exec_command ((char **) entry->command, path);
                     }
                 }
             }

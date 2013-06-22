@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2013 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -22,9 +22,7 @@
 #include "facron-lexer.h"
 #include "facron-parser.h"
 
-#define basename
 #include <string.h>
-#undef basename
 #include <unistd.h>
 
 struct FacronParser
@@ -32,40 +30,6 @@ struct FacronParser
     FacronLexer *lexer;
     FacronConfEntry *previous_entry;
 };
-
-static inline char *
-basename (const char *filename)
-{
-    char *bn = strrchr (filename, '/');
-    return strdup (bn ? bn + 1 : filename);
-}
-
-static inline char *
-substr (const char *str, size_t len)
-{
-    return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
-}
-
-static inline char *
-dirname (const char *filename)
-{
-    char *c = strrchr (filename, '/');
-    if (!c)
-        return strdup (".");
-
-    if (c[1] == '\0')
-    {
-        while (c != filename && c[-1] == '/')
-            --c;
-        c = memrchr (filename, '/', c - filename);
-    }
-
-    while (c != filename && c[-1] == '/')
-        --c;
-    return (c != filename) ? substr (filename, c - filename) :
-                             (filename[1] == '/') ? strdup ("//") :
-                                                    strdup ("/");
-}
 
 FacronConfEntry *
 facron_parser_parse_entry (FacronParser *parser)
@@ -126,16 +90,7 @@ facron_parser_parse_entry (FacronParser *parser)
     facron_lexer_skip_spaces (parser->lexer);
     while (!facron_lexer_end_of_line (parser->lexer) && n < 511)
     {
-        char *tmp = facron_lexer_read_string (parser->lexer);
-        entry->command[n++] = (!strcmp (tmp, "$$")) ? strdup (entry->path):
-                              (!strcmp (tmp, "$@")) ? dirname (entry->path):
-                              (!strcmp (tmp, "$#")) ? basename (entry->path):
-                              NULL;
-        if (entry->command[n-1])
-            free (tmp);
-        else
-            entry->command[n-1] = tmp;
-
+        entry->command[n++] = facron_lexer_read_string (parser->lexer);
         facron_lexer_skip_spaces (parser->lexer);
     }
 
