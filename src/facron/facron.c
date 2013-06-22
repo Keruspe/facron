@@ -281,8 +281,12 @@ main (int argc, char *argv[])
                     size_t plen = strlen (entry->path);
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
-                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) && !memcmp (entry->path, path, plen) && (entry->mask[i] & metadata->mask) == entry->mask[i])
-                            exec_command ((char **) entry->command);
+                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) &&
+                            path_len >= plen &&
+                            entry->path[plen - 1] == '/' || path[plen] == '/' &&
+                            !memcmp (entry->path, path, plen) &&
+                            (entry->mask[i] & metadata->mask) == (entry->mask[i] & ~FAN_EVENT_ON_CHILD))
+                                exec_command ((char **) entry->command);
                     }
                 }
             }
