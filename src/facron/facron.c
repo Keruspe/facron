@@ -281,7 +281,7 @@ main (int argc, char *argv[])
                     size_t plen = strlen (entry->path);
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
-                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) && memcmp (entry->path, path, plen) && (entry->mask[i] & metadata->mask) == entry->mask[i])
+                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) && !memcmp (entry->path, path, plen) && (entry->mask[i] & metadata->mask) == entry->mask[i])
                             exec_command ((char **) entry->command);
                     }
                 }
