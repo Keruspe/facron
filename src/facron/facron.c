@@ -194,21 +194,6 @@ exec_command (char *command[512])
     }
 }
 
-static bool
-path_is_ok (const char *wanted,
-            const char *got,
-            bool        recursive)
-{
-    size_t wlen = strlen (wanted), glen = strlen(got);
-
-    if (wlen > glen)
-        return false;
-
-    return !((recursive)
-        ? memcmp (wanted, got, wlen)
-        : strcmp (wanted, got));
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -283,11 +268,20 @@ main (int argc, char *argv[])
 
             for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
             {
-                if (path_is_ok (entry->path, path, metadata->mask & FAN_EVENT_ON_CHILD))
+                if (!strcmp (entry->path, path))
                 {
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & metadata->mask) == entry->mask[i])
+                            exec_command ((char **) entry->command);
+                    }
+                }
+                else
+                {
+                    size_t plen = strlen (entry->path);
+                    for (int i = 0; i < 512 && entry->mask[i]; ++i)
+                    {
+                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) && memcmp (entry->path, path, plen) && (entry->mask[i] & metadata->mask) == entry->mask[i])
                             exec_command ((char **) entry->command);
                     }
                 }
