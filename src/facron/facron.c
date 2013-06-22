@@ -283,7 +283,6 @@ main (int argc, char *argv[])
 
             for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
             {
-                if (!strcmp (path, entry->path))
                 if (path_is_ok (entry->path, path, metadata->mask & FAN_EVENT_ON_CHILD))
                 {
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
