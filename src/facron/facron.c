@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2013 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -194,6 +194,21 @@ exec_command (char *command[512])
     }
 }
 
+static bool
+path_is_ok (const char *wanted,
+            const char *got,
+            bool        recursive)
+{
+    size_t wlen = strlen (wanted), glen = strlen(got);
+
+    if (wlen > glen)
+        return false;
+
+    return !((recursive)
+        ? memcmp (wanted, got, wlen)
+        : strcmp (wanted, got));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -269,6 +284,7 @@ main (int argc, char *argv[])
             for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
             {
                 if (!strcmp (path, entry->path))
+                if (path_is_ok (entry->path, path, metadata->mask & FAN_EVENT_ON_CHILD))
                 {
                     for (int i = 0; i < 512 && entry->mask[i]; ++i)
                     {
