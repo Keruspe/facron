@@ -240,6 +240,6 @@ bool facron_lexer_reload_file (FacronLexer *lexer);
 
 void facron_lexer_free (FacronLexer *lexer);
 
-FacronLexer *facron_lexer_new (void);
+FacronLexer *facron_lexer_new (const char *filename);
 
 #endif /* __FACRON_CONF_LEXER_H__ */

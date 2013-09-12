@@ -70,11 +70,11 @@ facron_conf_free (FacronConf *conf)
 }
 
 FacronConf *
-facron_conf_new (void)
+facron_conf_new (const char *filename)
 {
     FacronConf *conf = (FacronConf *) malloc (sizeof (FacronConf));
 
-    conf->parser = facron_parser_new ();
+    conf->parser = facron_parser_new (filename);
     conf->entries = NULL;
     facron_conf_load (conf);
 

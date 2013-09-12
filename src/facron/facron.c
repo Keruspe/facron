@@ -235,6 +235,7 @@ exec_command (char       *command[512],
 int
 main (int argc, char *argv[])
 {
+    const char *conf_file = SYSCONFDIR "/facron.conf";
     bool background = false;
 
     switch (argc)
@@ -275,7 +276,7 @@ main (int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    _conf = facron_conf_new ();
+    _conf = facron_conf_new (conf_file);
     apply_conf ();
 
     char buf[4096];

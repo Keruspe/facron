@@ -31,6 +31,6 @@ bool facron_parser_reload (FacronParser *parser);
 
 void facron_parser_free (FacronParser *parser);
 
-FacronParser *facron_parser_new (void);
+FacronParser *facron_parser_new (const char *filename);
     
 #endif /* __FACRON_CONF_PARSER_H_ */

@@ -27,11 +27,12 @@
 
 struct FacronLexer
 {
-    FILE *file;
-    char *line;
-    char *line_beg;
-    ssize_t len;
-    ssize_t index;
+    const char *filename;
+    FILE       *file;
+    char       *line;
+    char       *line_beg;
+    ssize_t     len;
+    ssize_t     index;
 };
 
 static FacronChar
@@ -405,7 +406,7 @@ facron_lexer_reload_file (FacronLexer *lexer)
     if (lexer->file)
         fclose (lexer->file);
 
-    lexer->file = fopen (SYSCONFDIR "/facron.conf", "ro");
+    lexer->file = fopen (lexer->filename, "ro");
     lexer->line = lexer->line_beg = NULL;
     lexer->index = 0;
 
@@ -429,10 +430,11 @@ facron_lexer_free (FacronLexer *lexer)
 }
 
 FacronLexer *
-facron_lexer_new (void)
+facron_lexer_new (const char *filename)
 {
     FacronLexer *lexer = (FacronLexer *) malloc (sizeof (FacronLexer));
 
+    lexer->filename = filename;
     lexer->file = NULL;
     facron_lexer_reload_file (lexer);
 

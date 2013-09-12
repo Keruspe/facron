@@ -126,11 +126,11 @@ facron_parser_free (FacronParser *parser)
 }
 
 FacronParser *
-facron_parser_new (void)
+facron_parser_new (const char *filename)
 {
     FacronParser *parser = (FacronParser *) malloc (sizeof (FacronParser));
 
-    parser->lexer = facron_lexer_new ();
+    parser->lexer = facron_lexer_new (filename);
     parser->previous_entry = NULL;
 
     return parser;

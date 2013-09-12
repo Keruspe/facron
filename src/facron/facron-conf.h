@@ -32,6 +32,6 @@ const FacronConfEntry *facron_conf_get_entries (FacronConf *conf);
 
 void facron_conf_free (FacronConf *conf);
 
-FacronConf *facron_conf_new (void);
+FacronConf *facron_conf_new (const char *filename);
 
 #endif /* __FACRON_CONF_H_ */
