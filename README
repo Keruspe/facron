@@ -13,13 +13,13 @@ make
 sudo make install
 
 facron configuration file is "/etc/facron.conf".
-You can put as much entries as you want in this file, one entry per line.
+You can put as many entries as you want in this file, one entry per line.
 Each line must be formatted like this:
 
 <file path> <fanotify masks> <command>
 
-Each time an event matching the fanotify masks i sent regarding the file path given
-the command is launched
+Each time an event matching the fanotify masks on the file path given the
+command is launched.
 
 The fanotify masks available are:
 
@@ -42,15 +42,16 @@ If you configure your fanotify masks like this:
 
     FAN_MODIFY|FAN_CLOSE_WRITE,FAN_OPEN
 
-The event caught will be: either FAN_MODIFY AND FAN_CLOSE_WRITE, or FAN_OPEN
+The event caught will be either FAN_MODIFY AND FAN_CLOSE_WRITE, or FAN_OPEN
 
 The command should be an absolute path. You can pass it arguments.
-If any of your arguments contain sapces, you can surrond it with quotes or double quotes.
-Three special arguments are available:
+If any of your arguments contain sapces, you can surround it with quotes or double quotes.
+Four special arguments are available:
 
     $@ corresponds to the dirname of your file
     $# corresponds to the basename of your file
     $$ corresponds to the full path of your file
+    $* corresponds to the process id that accessed the path
 
 You can reload the configuration at any time by sending a SIGUSR1 to facron:
 
