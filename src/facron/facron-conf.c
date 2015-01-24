@@ -32,8 +32,6 @@ facron_conf_load (FacronConf *conf)
     if (!facron_parser_reload (conf->parser))
         return false;
 
-    fprintf (stderr, "Notice: loading configuration\n");
-
     for (FacronConfEntry *entry; (entry = facron_parser_parse_entry (conf->parser)); conf->entries = entry);
 
     return true;
@@ -72,6 +70,8 @@ facron_conf_free (FacronConf *conf)
 FacronConf *
 facron_conf_new (const char *filename)
 {
+    fprintf (stderr, "Notice: loading configuration from %s\n", filename);
+
     FacronConf *conf = (FacronConf *) malloc (sizeof (FacronConf));
 
     conf->parser = facron_parser_new (filename);
