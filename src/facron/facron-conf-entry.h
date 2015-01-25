@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2015 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@
 #define __FACRON_CONF_ENTRY_H__
 
 #include <stdbool.h>
-#include "facron.h"
+
+#define MAX_CMD_LEN 512
+#define MAX_MASK_LEN 512
 
 typedef struct FacronConfEntry FacronConfEntry;
 

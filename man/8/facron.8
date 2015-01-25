@@ -38,7 +38,7 @@ Each line must be formatted like this:
 
     <file path> <fanotify masks> <command>
 
-Each time an event matching the fanotify masks on the file path given the
+Each time we receive an event matching the fanotify masks on the file path given, the
 command is launched.
 
 The fanotify masks available are:
@@ -73,9 +73,8 @@ Four special arguments are available:
     $@ corresponds to the dirname of your file
     $# corresponds to the basename of your file
     $$ corresponds to the full path of your file
-    $* corresponds to the process id that accessed the path
+    $* corresponds to the process id that accessed the file
 
 You can reload the configuration at any time by sending a SIGUSR1 to facron:
 
     kill -USR1 $(pidof facron)
-

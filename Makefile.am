@@ -23,7 +23,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 
 AM_CFLAGS = \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \
-	-lm \
 	$(NULL)
 
 AM_LIBS = \

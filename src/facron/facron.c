@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012-2013 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2015 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -18,14 +18,12 @@
  */
 
 #include "config.h"
-#include "facron.h"
 #include "facron-conf.h"
 
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #define basename
 #include <string.h>
 #undef basename
@@ -130,6 +128,15 @@ usage (char *callee)
 }
 
 static inline char *
+print_pid (pid_t pid)
+{
+    char *tmp = NULL;
+    if (asprintf (&tmp, "%d", pid) < 1)
+        return strdup ("0");
+    return tmp;
+}
+
+static inline char *
 print_number (unsigned int n)
 {
     char *tmp = NULL;
@@ -183,7 +190,7 @@ dirname (const char *filename)
 static void
 exec_command (char       *command[MAX_CMD_LEN],
               const char *path,
-              int        pid)
+              pid_t       pid)
 {
     static unsigned int count = 0;
 
@@ -200,13 +207,7 @@ exec_command (char       *command[MAX_CMD_LEN],
         else if (!strcmp ("$#", field))
             subst = basename (path);
 	else if (!strcmp ("$*", field))
-	{
-		// why no itoa in C?
-		size_t size = (size_t)ceil(log10(pid));
-		char *it = malloc(size + 1);
-		sprintf(it, "%d", pid);
-		subst = it;
-	}
+            subst = print_pid (pid);
         else if (!strcmp ("$+", field))
             subst = print_number (++count);
         else if (!strcmp ("$-", field))
@@ -278,7 +279,7 @@ main (int argc, char *argv[])
     }
 
     signal (SIGTERM, &signal_handler);
-    signal (SIGINT, &signal_handler);
+    signal (SIGINT,  &signal_handler);
     signal (SIGUSR1, &signal_handler);
 
     if ((fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE)) < 0)
