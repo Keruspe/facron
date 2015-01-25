@@ -21,6 +21,7 @@
 #include "facron-conf.h"
 
 #include <fcntl.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -247,23 +248,30 @@ exec_command (char       *command[MAX_CMD_LEN],
 int
 main (int argc, char *argv[])
 {
-    const char *conf_file = SYSCONFDIR "/facron.conf";
-    bool background = false;
+    struct option long_options[] = {
+        { "background", no_argument, NULL, 'd' }, /* legacy compat */
+        { "daemon",     no_argument, NULL, 'd' },
+        { 0,            no_argument, NULL, 0   }
+    };
 
-    switch (argc)
+    const char *conf_file = SYSCONFDIR "/facron.conf";
+    bool daemon = false;
+    int c;
+
+    while ((c = getopt_long (argc, argv, "d", long_options, NULL)) != -1)
     {
-    case 1:
-        break;
-    case 2:
-        if (strcmp (argv[1], "--background"))
+        switch (c)
+        {
+        case 'd':
+            daemon = true;
+            break;
+        default:
             usage (argv[0]);
-        background = true;
-        break;
-    default:
-        usage (argv[0]);
+            return EXIT_FAILURE;
+        }
     }
 
-    if (background)
+    if (daemon)
     {
         pid_t p = fork ();
         if (p)
