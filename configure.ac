@@ -17,6 +17,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([facron],[0.9],[Marc-Antoine@Perennou.com])
+AC_CHECK_LIB(m, log10)
 
 PKGCONFIG_REQUIRED="0.22"
 

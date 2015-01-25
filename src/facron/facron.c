@@ -18,12 +18,14 @@
  */
 
 #include "config.h"
+#include "facron.h"
 #include "facron-conf.h"
 
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #define basename
 #include <string.h>
 #undef basename
@@ -67,7 +69,7 @@ walk_conf (FacronAction action)
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
 
-        for (int i = 0; i < 512 && entry->mask[i]; ++i)
+        for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
             fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
     }
 }
@@ -123,7 +125,7 @@ signal_handler (int signum)
 static inline void
 usage (char *callee)
 {
-    fprintf (stderr, "USAGE: %s [--background]", callee);
+    fprintf (stderr, "USAGE: %s [--background]\n", callee);
     exit (EXIT_FAILURE);
 }
 
@@ -179,13 +181,14 @@ dirname (const char *filename)
 }
 
 static void
-exec_command (char       *command[512],
-              const char *path)
+exec_command (char       *command[MAX_CMD_LEN],
+              const char *path,
+              int        pid)
 {
     static unsigned int count = 0;
 
     CommandBackup *backup = NULL;
-    for (unsigned int i = 0; i < 512 && command[i]; ++i)
+    for (unsigned int i = 0; i < MAX_CMD_LEN && command[i]; ++i)
     {
         char *field = command[i];
         char *subst = NULL;
@@ -196,6 +199,14 @@ exec_command (char       *command[512],
             subst = dirname (path);
         else if (!strcmp ("$#", field))
             subst = basename (path);
+	else if (!strcmp ("$*", field))
+	{
+		// why no itoa in C?
+		size_t size = (size_t)ceil(log10(pid));
+		char *it = malloc(size + 1);
+		sprintf(it, "%d", pid);
+		subst = it;
+	}
         else if (!strcmp ("$+", field))
             subst = print_number (++count);
         else if (!strcmp ("$-", field))
@@ -309,23 +320,23 @@ main (int argc, char *argv[])
             {
                 if (!strcmp (entry->path, path))
                 {
-                    for (int i = 0; i < 512 && entry->mask[i]; ++i)
+                    for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & metadata->mask) == entry->mask[i])
-                            exec_command ((char **) entry->command, path);
+                            exec_command ((char **) entry->command, path, metadata->pid);
                     }
                 }
                 else
                 {
                     size_t plen = strlen (entry->path);
-                    for (int i = 0; i < 512 && entry->mask[i]; ++i)
+                    for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
                     {
                         if ((entry->mask[i] & FAN_EVENT_ON_CHILD) &&
                             (size_t)path_len >= plen &&
                             (entry->path[plen - 1] == '/' || path[plen] == '/') &&
                             !memcmp (entry->path, path, plen) &&
                             (entry->mask[i] & metadata->mask) == (entry->mask[i] & ~FAN_EVENT_ON_CHILD))
-                                exec_command ((char **) entry->command, path);
+                                exec_command ((char **) entry->command, path, metadata->pid);
                     }
                 }
             }

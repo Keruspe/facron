@@ -25,7 +25,7 @@ void
 facron_conf_entry_free (FacronConfEntry *entry, bool follow)
 {
     free (entry->path);
-    for (int i = 0; i < 512 && entry->command[i]; ++i)
+    for (int i = 0; i < MAX_CMD_LEN && entry->command[i]; ++i)
         free (entry->command[i]);
     if (follow && entry->next)
         facron_conf_entry_free (entry->next, true);
