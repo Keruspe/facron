@@ -249,19 +249,23 @@ int
 main (int argc, char *argv[])
 {
     struct option long_options[] = {
-        { "background", no_argument, NULL, 'd' }, /* legacy compat */
-        { "daemon",     no_argument, NULL, 'd' },
-        { 0,            no_argument, NULL, 0   }
+        { "background", no_argument,       NULL, 'd' }, /* legacy compat */
+        { "conf",       required_argument, NULL, 'c' },
+        { "daemon",     no_argument,       NULL, 'd' },
+        { 0,            no_argument,       NULL, 0   }
     };
 
     const char *conf_file = SYSCONFDIR "/facron.conf";
     bool daemon = false;
     int c;
 
-    while ((c = getopt_long (argc, argv, "d", long_options, NULL)) != -1)
+    while ((c = getopt_long (argc, argv, "c:d", long_options, NULL)) != -1)
     {
         switch (c)
         {
+        case 'c':
+            conf_file = optarg;
+            break;
         case 'd':
             daemon = true;
             break;
