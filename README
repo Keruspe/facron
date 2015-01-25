@@ -53,6 +53,12 @@ Four special arguments are available:
     $$ corresponds to the full path of your file
     $* corresponds to the process id that accessed the file
 
+Three additional arguments are available which handle a global counter:
+
+    $+ increments the counter and returns its new value
+    $- decrements the counter and returns its new value
+    $= returns its value
+
 You can reload the configuration at any time by sending a SIGUSR1 to facron:
 
     kill -USR1 $(pidof facron)
