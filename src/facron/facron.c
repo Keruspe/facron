@@ -124,7 +124,7 @@ signal_handler (int signum)
 static inline void
 usage (char *callee)
 {
-    fprintf (stderr, "USAGE: %s [--background]\n", callee);
+    fprintf (stderr, "USAGE: %s [--conf|-c config_file] [--daemon|-d]\n", callee);
     exit (EXIT_FAILURE);
 }
 
