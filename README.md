@@ -25,20 +25,20 @@ command is launched.
 
 The fanotify masks available are:
 
-    `FAN_ACCESS`
-    `FAN_MODIFY`
-    `FAN_CLOSE_WRITE`
-    `FAN_CLOSE_NOWRITE`
-    `FAN_OPEN`
-    `FAN_Q_OVERFLOW`
-    `FAN_OPEN_PERM`
-    `FAN_ACCESS_PERM`
-    `FAN_ONDIR`
-    `FAN_EVENT_ON_CHILD`
-    `FAN_CLOSE`
-    `FAN_ALL_EVENTS`
-    `FAN_ALL_PERM_EVENTS`
-    `FAN_ALL_OUTGOING_EVENTS`
+ - `FAN_ACCESS`
+ - `FAN_MODIFY`
+ - `FAN_CLOSE_WRITE`
+ - `FAN_CLOSE_NOWRITE`
+ - `FAN_OPEN`
+ - `FAN_Q_OVERFLOW`
+ - `FAN_OPEN_PERM`
+ - `FAN_ACCESS_PERM`
+ - `FAN_ONDIR`
+ - `FAN_EVENT_ON_CHILD`
+ - `FAN_CLOSE`
+ - `FAN_ALL_EVENTS`
+ - `FAN_ALL_PERM_EVENTS`
+ - `FAN_ALL_OUTGOING_EVENTS`
 
 If you configure your fanotify masks like this:
 
@@ -52,16 +52,16 @@ The command should be an absolute path. You can pass it arguments.
 If any of your arguments containis sapces, you can surround it with quotes or double quotes.
 Four special arguments are available:
 
-    `$@` corresponds to the dirname of your file
-    `$#` corresponds to the basename of your file
-    `$$` corresponds to the full path of your file
-    `$*` corresponds to the process id that accessed the file
+ - `$@` corresponds to the dirname of your file
+ - `$#` corresponds to the basename of your file
+ - `$$` corresponds to the full path of your file
+ - `$*` corresponds to the process id that accessed the file
 
 Three additional arguments are available which handle a global counter:
 
-    `$+` increments the counter and returns its new value
-    `$-` decrements the counter and returns its new value
-    `$=` returns its value
+ - `$+` increments the counter and returns its new value
+ - `$-` decrements the counter and returns its new value
+ - `$=` returns its value
 
 You can reload the configuration at any time by sending a SIGUSR1 to facron:
 
