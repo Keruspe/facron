@@ -294,7 +294,7 @@ main (int argc, char *argv[])
     signal (SIGINT,  &signal_handler);
     signal (SIGUSR1, &signal_handler);
 
-    if ((fanotify_fd = fanotify_init (FAN_CLASS_NOTIF, O_RDONLY|O_LARGEFILE)) < 0)
+    if ((fanotify_fd = fanotify_init (FAN_CLASS_NOTIF|FAN_CLOEXEC|FAN_NONBLOCK, O_RDONLY|O_LARGEFILE)) < 0)
     {
         fprintf (stderr, "Could not initialize fanotify\n");
         return EXIT_FAILURE;
