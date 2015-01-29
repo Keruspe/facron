@@ -1,6 +1,6 @@
 facron is a new generation filesystem cron
 
-See <http://www.imagination-land.org/posts/2012-12-04-facron-fanotify-cron-system.html> and 
+See <http://www.imagination-land.org/posts/2012-12-04-facron-fanotify-cron-system.html> and
 <http://www.imagination-land.org/posts/2012-12-07-facron-released.html> for more details.
 
 To build facron:

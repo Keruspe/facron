@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2015 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ struct FacronConf
 {
     FacronParser *parser;
     FacronConfEntry *entries;
+    const char *filename;
 };
 
 static bool
@@ -31,6 +32,8 @@ facron_conf_load (FacronConf *conf)
 {
     if (!facron_parser_reload (conf->parser))
         return false;
+
+    fprintf (stderr, "Notice: loading configuration from %s\n", conf->filename);
 
     for (FacronConfEntry *entry; (entry = facron_parser_parse_entry (conf->parser)); conf->entries = entry);
 
@@ -70,12 +73,11 @@ facron_conf_free (FacronConf *conf)
 FacronConf *
 facron_conf_new (const char *filename)
 {
-    fprintf (stderr, "Notice: loading configuration from %s\n", filename);
-
     FacronConf *conf = (FacronConf *) malloc (sizeof (FacronConf));
 
     conf->parser = facron_parser_new (filename);
     conf->entries = NULL;
+    conf->filename = filename;
     facron_conf_load (conf);
 
     return conf;

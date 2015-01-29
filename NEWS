@@ -1,3 +1,12 @@
+facron 1.0
+==========
+
+- fixed systemd unit
+- `$*` stands for accessing process pid
+- new internal counter with `$+` `$-` and `$=`
+- customisable config file
+- fix interaction with folders
+
 facron 0.9
 ==========
 

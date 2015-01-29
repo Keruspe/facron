@@ -226,7 +226,7 @@ exec_command (char       *command[MAX_CMD_LEN],
             command[i] = subst;
         }
     }
-   
+
     pid_t p = fork ();
     if (p)
         waitpid (p, NULL, 0);

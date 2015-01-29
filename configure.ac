@@ -1,6 +1,6 @@
 # This file is part of facron.
 #
-# Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+# Copyright 2012-2015 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
 #
 # facron is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.69])
-AC_INIT([facron],[0.9],[Marc-Antoine@Perennou.com])
+AC_INIT([facron],[1.0],[Marc-Antoine@Perennou.com])
 
 PKGCONFIG_REQUIRED="0.22"
 
