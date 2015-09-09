@@ -26,7 +26,7 @@
 
 typedef struct FacronConf FacronConf;
 
-bool facron_conf_reload (FacronConf *conf);
+FacronConfEntry *facron_conf_reload (FacronConf *conf);
 
 const FacronConfEntry *facron_conf_get_entries (FacronConf *conf);
 

@@ -48,7 +48,7 @@ typedef enum
 } FacronAction;
 
 static inline void
-walk_conf (FacronAction action)
+walk_conf (FacronAction action, const FacronConfEntry *entries)
 {
     int flag;
     bool notice = false;
@@ -63,7 +63,7 @@ walk_conf (FacronAction action)
         break;
     }
 
-    for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
+    for (const FacronConfEntry *entry = entries; entry; entry = entry->next)
     {
         if (notice)
             fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
@@ -75,31 +75,31 @@ walk_conf (FacronAction action)
 
 
 static inline void
-apply_conf (void)
+apply_conf (const FacronConfEntry *entries)
 {
-    walk_conf (ADD);
+    walk_conf (ADD, entries);
 }
 
 static inline void
-unapply_conf (void)
+unapply_conf (const FacronConfEntry *entries)
 {
-    walk_conf (REMOVE);
+    walk_conf (REMOVE, entries);
 }
 
 static inline void
 reapply_conf (void)
 {
-    if (facron_conf_reload (_conf))
-    {
-        unapply_conf ();
-        apply_conf ();
-    }
+    FacronConfEntry *old_entries = facron_conf_reload (_conf);
+
+    unapply_conf (old_entries);
+    apply_conf (facron_conf_get_entries (_conf));
+    facron_conf_entry_free (old_entries, true);
 }
 
 static inline void
 cleanup (void)
 {
-    unapply_conf ();
+    unapply_conf (facron_conf_get_entries (_conf));
     facron_conf_free (_conf);
     close (fanotify_fd);
 }
@@ -301,7 +301,7 @@ main (int argc, char *argv[])
     }
 
     _conf = facron_conf_new (conf_file);
-    apply_conf ();
+    apply_conf (facron_conf_get_entries (_conf));
 
     char buf[4096];
     size_t len;

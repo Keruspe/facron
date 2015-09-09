@@ -40,7 +40,7 @@ facron_conf_load (FacronConf *conf)
     return true;
 }
 
-bool
+FacronConfEntry *
 facron_conf_reload (FacronConf *conf)
 {
     FacronConfEntry *entries = conf->entries;
@@ -48,11 +48,12 @@ facron_conf_reload (FacronConf *conf)
     if (!facron_conf_load (conf))
     {
         conf->entries = entries;
-        return false;
+        return NULL;
     }
-    if (entries)
-        facron_conf_entry_free (entries, true);
-    return true;
+    else
+    {
+        return entries;
+    }
 }
 
 const FacronConfEntry *
