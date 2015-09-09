@@ -106,7 +106,7 @@ facron_parser_parse_entry (FacronParser *parser)
     return entry;
 
 fail:
-    facron_conf_entry_free (entry, false);
+    facron_conf_entry_free (entry);
 fail_early:
     return facron_parser_parse_entry (parser);
 }

@@ -66,7 +66,7 @@ void
 facron_conf_free (FacronConf *conf)
 {
     if (conf->entries)
-        facron_conf_entry_free (conf->entries, true);
+        facron_conf_entries_free (conf->entries);
     facron_parser_free (conf->parser);
     free (conf);
 }

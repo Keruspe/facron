@@ -93,7 +93,7 @@ reapply_conf (void)
 
     unapply_conf (old_entries);
     apply_conf (facron_conf_get_entries (_conf));
-    facron_conf_entry_free (old_entries, true);
+    facron_conf_entries_free (old_entries);
 }
 
 static inline void

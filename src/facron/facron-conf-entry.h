@@ -35,7 +35,8 @@ struct FacronConfEntry
     char *command[MAX_CMD_LEN];
 };
 
-void facron_conf_entry_free (FacronConfEntry *entry, bool follow);
+void facron_conf_entry_free (FacronConfEntry *entry);
+void facron_conf_entries_free (FacronConfEntry *entry);
 
 FacronConfEntry *facron_conf_entry_new (FacronConfEntry *next, char *path);
 
