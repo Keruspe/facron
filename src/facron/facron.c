@@ -107,17 +107,19 @@ cleanup (void)
 static void
 signal_handler (int signum)
 {
+    int status = signum;
+
     switch (signum)
     {
     case SIGUSR1:
         reapply_conf ();
         break;
     case SIGTERM:
-        signum = EXIT_SUCCESS;
+        status = EXIT_SUCCESS;
     default:
         fprintf (stderr, "Signal %d received, exiting.\n", signum);
         cleanup ();
-        exit (signum);
+        exit (status);
     }
 }
 
