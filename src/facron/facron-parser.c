@@ -27,7 +27,7 @@
 
 struct FacronParser
 {
-    FacronLexer *lexer;
+    FacronLexer     *lexer;
     FacronConfEntry *previous_entry;
 };
 
@@ -62,6 +62,7 @@ facron_parser_parse_entry (FacronParser *parser)
     int n = 0;
     FacronResult result;
     unsigned long long mask;
+
     while (n < 511 && (result = facron_lexer_next_token (parser->lexer, &mask))) /* != S_END */
     {
         switch (result)
@@ -78,9 +79,10 @@ facron_parser_parse_entry (FacronParser *parser)
             break;
         }
     }
+
     entry->mask[n] |= mask;
 
-    if (n == 0 && !entry->mask[n])
+    if (!n && !entry->mask[n])
     {
         fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
         goto fail;
@@ -88,13 +90,14 @@ facron_parser_parse_entry (FacronParser *parser)
 
     n = 0;
     facron_lexer_skip_spaces (parser->lexer);
+
     while (!facron_lexer_end_of_line (parser->lexer) && n < 511)
     {
         entry->command[n++] = facron_lexer_read_string (parser->lexer);
         facron_lexer_skip_spaces (parser->lexer);
     }
 
-    if (n == 0)
+    if (!n)
     {
         fprintf (stderr, "Error: no command line specified for \"%s\"\n", entry->path);
         goto fail;
@@ -115,6 +118,7 @@ bool
 facron_parser_reload (FacronParser *parser)
 {
     parser->previous_entry = NULL;
+
     return facron_lexer_reload_file (parser->lexer);
 }
 

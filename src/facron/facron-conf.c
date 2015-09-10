@@ -25,9 +25,9 @@
 
 struct FacronConf
 {
-    FacronParser *parser;
+    FacronParser    *parser;
     FacronConfEntry *entries;
-    const char *filename;
+    const char      *filename;
 };
 
 typedef enum
@@ -53,20 +53,20 @@ static FacronConfEntry *
 facron_conf_reload (FacronConf *conf)
 {
     FacronConfEntry *entries = conf->entries;
+
     conf->entries = NULL;
-    if (!facron_conf_load (conf))
-    {
-        conf->entries = entries;
-        return NULL;
-    }
-    else
-    {
+
+    if (facron_conf_load (conf))
         return entries;
-    }
+
+    conf->entries = entries;
+    return NULL;
 }
 
 static void
-facron_conf_walk (FacronAction action, const FacronConfEntry *entries, int fanotify_fd)
+facron_conf_walk (FacronAction           action,
+                  const FacronConfEntry *entries,
+                  int                    fanotify_fd)
 {
     int flag;
     bool notice = false;
@@ -92,19 +92,22 @@ facron_conf_walk (FacronAction action, const FacronConfEntry *entries, int fanot
 }
 
 void
-facron_conf_apply (const FacronConfEntry *entries, int fanotify_fd)
+facron_conf_apply (const FacronConfEntry *entries,
+                   int                    fanotify_fd)
 {
     facron_conf_walk (ADD, entries, fanotify_fd);
 }
 
 void
-facron_conf_unapply (const FacronConfEntry *entries, int fanotify_fd)
+facron_conf_unapply (const FacronConfEntry *entries,
+                     int                    fanotify_fd)
 {
     facron_conf_walk (REMOVE, entries, fanotify_fd);
 }
 
 void
-facron_conf_reapply (FacronConf *conf, int fanotify_fd)
+facron_conf_reapply (FacronConf *conf,
+                     int         fanotify_fd)
 {
     FacronConfEntry *old_entries = facron_conf_reload (conf);
 
@@ -120,11 +123,11 @@ facron_conf_get_entries (FacronConf *conf)
 }
 
 void
-facron_conf_free (FacronConf *conf, int fanotify_fd)
+facron_conf_free (FacronConf *conf,
+                  int         fanotify_fd)
 {
     facron_conf_unapply (conf->entries, fanotify_fd);
-    if (conf->entries)
-        facron_conf_entries_free (conf->entries);
+    facron_conf_entries_free (conf->entries);
     facron_parser_free (conf->parser);
     free (conf);
 }
@@ -137,6 +140,7 @@ facron_conf_new (const char *filename)
     conf->parser = facron_parser_new (filename);
     conf->entries = NULL;
     conf->filename = filename;
+
     facron_conf_load (conf);
 
     return conf;

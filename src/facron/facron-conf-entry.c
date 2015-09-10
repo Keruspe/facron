@@ -41,7 +41,8 @@ facron_conf_entries_free (FacronConfEntry *entry)
 }
 
 FacronConfEntry *
-facron_conf_entry_new (FacronConfEntry *next, char *path)
+facron_conf_entry_new (FacronConfEntry *next,
+                       char            *path)
 {
     FacronConfEntry *entry = (FacronConfEntry *) malloc (sizeof (FacronConfEntry));
 

@@ -95,8 +95,8 @@ print_number (unsigned int n)
 typedef struct CommandBackup CommandBackup;
 struct CommandBackup
 {
-    int index;
-    char *field;
+    int            index;
+    char          *field;
     CommandBackup *next;
 };
 
@@ -108,7 +108,8 @@ basename (const char *filename)
 }
 
 static inline char *
-substr (const char *str, size_t len)
+substr (const char *str,
+        size_t      len)
 {
     return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
 }
@@ -192,7 +193,8 @@ exec_command (char       *command[MAX_CMD_LEN],
 }
 
 int
-main (int argc, char *argv[])
+main (int   argc,
+      char *argv[])
 {
     struct option long_options[] = {
         { "background", no_argument,       NULL, 'd' }, /* legacy compat */

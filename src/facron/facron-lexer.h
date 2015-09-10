@@ -234,7 +234,8 @@ bool  facron_lexer_end_of_line  (FacronLexer *lexer);
 char *facron_lexer_read_string  (FacronLexer *lexer);
 void  facron_lexer_skip_spaces  (FacronLexer *lexer);
 
-FacronResult facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask);
+FacronResult facron_lexer_next_token (FacronLexer        *lexer,
+                                      unsigned long long *mask);
 
 bool facron_lexer_reload_file (FacronLexer *lexer);
 

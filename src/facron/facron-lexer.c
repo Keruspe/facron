@@ -313,7 +313,7 @@ facron_lexer_invalid_line (FacronLexer *lexer)
 bool
 facron_lexer_end_of_line (FacronLexer *lexer)
 {
-    return (lexer->len == 0 || lexer->index == lexer->len);
+    return (!lexer->len || lexer->index == lexer->len);
 }
 
 char *
@@ -323,6 +323,7 @@ facron_lexer_read_string (FacronLexer *lexer)
         return NULL;
 
     char delim = (lexer->line[0] == '"' || lexer->line[0] == '\'') ? lexer->line[0] : '\0';
+
     if (delim != '\0')
     {
         ++lexer->line;
@@ -338,6 +339,7 @@ facron_lexer_read_string (FacronLexer *lexer)
         ++lexer->line;
         --lexer->len;
     }
+
     lexer->line[0] = '\0';
     ++lexer->line;
     --lexer->len;
@@ -356,33 +358,40 @@ facron_lexer_skip_spaces (FacronLexer *lexer)
 }
 
 FacronResult
-facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
+facron_lexer_next_token (FacronLexer        *lexer,
+                         unsigned long long *mask)
 {
     if (lexer->line == NULL)
         return R_ERROR;
 
     FacronState state = EMPTY;
+
     while (lexer->index < lexer->len)
     {
         FacronState prev_state = state;
         FacronChar c = char_to_FacronChar (lexer->line[lexer->index]);
+
         state = state_transitions_table[state][c];
+
         switch (state)
         {
         case ERROR:
             lexer->line[lexer->len - 1] = '\0';
             fprintf (stderr, "Error at char %c: \"%s\" not understood\n", lexer->line[lexer->index], lexer->line + lexer->index);
+
             return R_ERROR;
         case EMPTY:
             *mask = FacronToken_to_mask (prev_state);
             ++lexer->line;
             --lexer->len;
+
             switch (c)
             {
             case C_SPACE:
                 lexer->line += (lexer->index);
                 lexer->len -= (lexer->index);
                 lexer->index = 0;
+
                 return R_END;
             case C_COMMA:
                 return R_COMMA;
@@ -394,6 +403,7 @@ facron_lexer_next_token (FacronLexer *lexer, unsigned long long *mask)
         default:
             break;
         }
+
         ++lexer->index;
     }
 
@@ -413,6 +423,7 @@ facron_lexer_reload_file (FacronLexer *lexer)
     if (!lexer->file)
     {
         fprintf (stderr, "Error: could not load configuration file, does \"" SYSCONFDIR "/facron.conf\" exist?\n");
+
         return false;
     }
 

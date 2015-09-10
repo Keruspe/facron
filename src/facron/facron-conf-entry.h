@@ -29,15 +29,16 @@ typedef struct FacronConfEntry FacronConfEntry;
 
 struct FacronConfEntry
 {
-    FacronConfEntry *next;
-    char *path;
+    FacronConfEntry   *next;
+    char              *path;
     unsigned long long mask[MAX_MASK_LEN];
-    char *command[MAX_CMD_LEN];
+    char              *command[MAX_CMD_LEN];
 };
 
 void facron_conf_entry_free (FacronConfEntry *entry);
 void facron_conf_entries_free (FacronConfEntry *entry);
 
-FacronConfEntry *facron_conf_entry_new (FacronConfEntry *next, char *path);
+FacronConfEntry *facron_conf_entry_new (FacronConfEntry *next,
+                                        char            *path);
 
 #endif /* __FACRON_CONF_ENTRY_H_ */
