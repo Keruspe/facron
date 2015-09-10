@@ -26,10 +26,8 @@
 
 typedef struct FacronConf FacronConf;
 
-void facron_conf_apply   (const FacronConfEntry *entries,
-                          int                    fanotify_fd);
-void facron_conf_unapply (const FacronConfEntry *entries,
-                          int                    fanotify_fd);
+void facron_conf_apply   (FacronConf *conf,
+                          int         fanotify_fd);
 void facron_conf_reapply (FacronConf *conf,
                           int         fanotify_fd);
 

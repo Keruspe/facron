@@ -249,7 +249,7 @@ main (int   argc,
     }
 
     _conf = facron_conf_new (conf_file);
-    facron_conf_apply (facron_conf_get_entries (_conf), fanotify_fd);
+    facron_conf_apply (_conf, fanotify_fd);
 
     char buf[4096];
     size_t len;

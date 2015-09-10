@@ -92,13 +92,13 @@ facron_conf_walk (FacronAction           action,
 }
 
 void
-facron_conf_apply (const FacronConfEntry *entries,
-                   int                    fanotify_fd)
+facron_conf_apply (FacronConf *conf,
+                   int         fanotify_fd)
 {
-    facron_conf_walk (ADD, entries, fanotify_fd);
+    facron_conf_walk (ADD, conf->entries, fanotify_fd);
 }
 
-void
+static inline void
 facron_conf_unapply (const FacronConfEntry *entries,
                      int                    fanotify_fd)
 {
@@ -112,7 +112,7 @@ facron_conf_reapply (FacronConf *conf,
     FacronConfEntry *old_entries = facron_conf_reload (conf);
 
     facron_conf_unapply (old_entries, fanotify_fd);
-    facron_conf_apply (conf->entries, fanotify_fd);
+    facron_conf_apply (conf, fanotify_fd);
     facron_conf_entries_free (old_entries);
 }
 
