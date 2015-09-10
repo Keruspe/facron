@@ -29,6 +29,8 @@ sbin_facron_SOURCES = \
 	src/facron/facron-lexer.c \
 	src/facron/facron-parser.h \
 	src/facron/facron-parser.c \
+	src/facron/facron-util.h \
+	src/facron/facron-util.c \
 	$(NULL)
 
 sbin_facron_CFLAGS = \

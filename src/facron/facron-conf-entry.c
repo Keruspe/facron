@@ -1,7 +1,7 @@
 /*
  *      This file is part of facron.
  *
- *      Copyright 2012 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
+ *      Copyright 2012-2015 Marc-Antoine Perennou <Marc-Antoine@Perennou.com>
  *
  *      facron is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -18,15 +18,12 @@
  */
 
 #include "facron-conf-entry.h"
+#include "facron-util.h"
 
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define basename
 #include <string.h>
-#undef basename
-
-#include <sys/wait.h>
 
 struct FacronConfEntry
 {
@@ -85,116 +82,6 @@ facron_conf_entry_apply (const FacronConfEntry *entry,
         fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
 }
 
-static inline char *
-print_pid (pid_t pid)
-{
-    char *tmp = NULL;
-    if (asprintf (&tmp, "%d", pid) < 1)
-        return strdup ("0");
-    return tmp;
-}
-
-static inline char *
-print_number (unsigned int n)
-{
-    char *tmp = NULL;
-    if (asprintf (&tmp, "%u", n) < 1)
-        return strdup ("0");
-    return tmp;
-}
-
-static inline char *
-basename (const char *filename)
-{
-    char *bn = strrchr (filename, '/');
-    return strdup (bn ? bn + 1 : filename);
-}
-
-static inline char *
-substr (const char *str,
-        size_t      len)
-{
-    return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
-}
-
-static inline char *
-dirname (const char *filename)
-{
-    char *c = strrchr (filename, '/');
-    if (!c)
-        return strdup (".");
-
-    if (c[1] == '\0')
-    {
-        while (c != filename && c[-1] == '/')
-            --c;
-        c = memrchr (filename, '/', c - filename);
-    }
-
-    while (c != filename && c[-1] == '/')
-        --c;
-    return (c != filename) ? substr (filename, c - filename) :
-                             (filename[1] == '/') ? strdup ("//") :
-                                                    strdup ("/");
-}
-
-static void
-exec_command (char       *command[MAX_CMD_LEN],
-              const char *path,
-              pid_t       pid)
-{
-    static unsigned int count = 0;
-
-    CommandBackup *backup = NULL;
-    for (unsigned int i = 0; i < MAX_CMD_LEN && command[i]; ++i)
-    {
-        char *field = command[i];
-        char *subst = NULL;
-
-        if (!strcmp ("$$", field))
-            subst = strdup (path);
-        else if (!strcmp ("$@", field))
-            subst = dirname (path);
-        else if (!strcmp ("$#", field))
-            subst = basename (path);
-	else if (!strcmp ("$*", field))
-            subst = print_pid (pid);
-        else if (!strcmp ("$+", field))
-            subst = print_number (++count);
-        else if (!strcmp ("$-", field))
-            subst = print_number (--count);
-        else if (!strcmp ("$=", field))
-            subst = print_number (count);
-
-        if (subst)
-        {
-            CommandBackup *b = (CommandBackup *) malloc (sizeof (CommandBackup));
-            b->index = i;
-            b->field = field;
-            b->next = backup;
-            backup = b;
-            command[i] = subst;
-        }
-    }
-
-    pid_t p = fork ();
-    if (p)
-        waitpid (p, NULL, 0);
-    else
-    {
-        if (fork ())
-            _exit (EXIT_SUCCESS);
-        else
-            execv (command[0], command);
-    }
-
-    for (CommandBackup *next; backup != NULL; next = backup->next, free (backup), backup = next)
-    {
-        free (command[backup->index]);
-        command[backup->index] = backup->field;
-    }
-}
-
 void
 facron_conf_entry_handle (const FacronConfEntry *entry,
                           const char            *path,
@@ -206,7 +93,7 @@ facron_conf_entry_handle (const FacronConfEntry *entry,
         for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
         {
             if ((entry->mask[i] & metadata->mask) == entry->mask[i])
-                exec_command ((char **) entry->command, path, metadata->pid);
+                facron_exec_command ((char **) entry->command, path, metadata->pid);
         }
     }
     else
@@ -219,7 +106,7 @@ facron_conf_entry_handle (const FacronConfEntry *entry,
                 (entry->path[plen - 1] == '/' || path[plen] == '/') &&
                 !memcmp (entry->path, path, plen) &&
                 (entry->mask[i] & metadata->mask) == (entry->mask[i] & ~FAN_EVENT_ON_CHILD))
-                    exec_command ((char **) entry->command, path, metadata->pid);
+                    facron_exec_command ((char **) entry->command, path, metadata->pid);
         }
     }
 }
