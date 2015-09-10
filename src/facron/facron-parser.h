@@ -25,7 +25,8 @@
 
 typedef struct FacronParser FacronParser;
 
-FacronConfEntry *facron_parser_parse_entry (FacronParser *parser);
+FacronConfEntry *facron_parser_parse_entry (FacronParser    *parser,
+                                            FacronConfEntry *previous);
 
 bool facron_parser_reload (FacronParser *parser);
 

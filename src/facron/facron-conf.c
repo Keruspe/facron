@@ -44,7 +44,7 @@ facron_conf_load (FacronConf *conf)
 
     fprintf (stderr, "Notice: loading configuration from %s\n", conf->filename);
 
-    for (FacronConfEntry *entry; (entry = facron_parser_parse_entry (conf->parser)); conf->entries = entry);
+    for (FacronConfEntry *entry; (entry = facron_parser_parse_entry (conf->parser, conf->entries)); conf->entries = entry);
 
     return true;
 }

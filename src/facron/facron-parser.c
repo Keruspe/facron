@@ -28,11 +28,11 @@
 struct FacronParser
 {
     FacronLexer     *lexer;
-    FacronConfEntry *previous_entry;
 };
 
 FacronConfEntry *
-facron_parser_parse_entry (FacronParser *parser)
+facron_parser_parse_entry (FacronParser    *parser,
+                           FacronConfEntry *previous)
 {
     if (!facron_lexer_read_line (parser->lexer))
         return NULL;
@@ -57,7 +57,7 @@ facron_parser_parse_entry (FacronParser *parser)
         goto fail_early;
     }
 
-    FacronConfEntry *entry = facron_conf_entry_new (parser->previous_entry, path);
+    FacronConfEntry *entry = facron_conf_entry_new (previous, path);
 
     int n = 0;
     FacronResult result;
@@ -104,21 +104,18 @@ facron_parser_parse_entry (FacronParser *parser)
     }
 
     entry->command[n] = NULL;
-    parser->previous_entry = entry;
 
     return entry;
 
 fail:
     facron_conf_entry_free (entry);
 fail_early:
-    return facron_parser_parse_entry (parser);
+    return facron_parser_parse_entry (parser, previous);
 }
 
 bool
 facron_parser_reload (FacronParser *parser)
 {
-    parser->previous_entry = NULL;
-
     return facron_lexer_reload_file (parser->lexer);
 }
 
@@ -135,7 +132,6 @@ facron_parser_new (const char *filename)
     FacronParser *parser = (FacronParser *) malloc (sizeof (FacronParser));
 
     parser->lexer = facron_lexer_new (filename);
-    parser->previous_entry = NULL;
 
     return parser;
 }
