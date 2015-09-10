@@ -16,7 +16,7 @@
 # along with facron.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.69])
-AC_INIT([facron],[1.0],[Marc-Antoine@Perennou.com])
+AC_INIT([facron],[1.1],[Marc-Antoine@Perennou.com])
 
 PKGCONFIG_REQUIRED="0.22"
 
