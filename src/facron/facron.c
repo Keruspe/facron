@@ -41,66 +41,10 @@ static FacronConf *_conf = NULL;
 
 typedef struct fanotify_event_metadata FacronMetadata;
 
-typedef enum
-{
-    ADD,
-    REMOVE
-} FacronAction;
-
-static inline void
-walk_conf (FacronAction action, const FacronConfEntry *entries)
-{
-    int flag;
-    bool notice = false;
-
-    switch (action) {
-    case ADD:
-        flag = FAN_MARK_ADD;
-        notice = true;
-        break;
-    default:
-        flag = FAN_MARK_REMOVE;
-        break;
-    }
-
-    for (const FacronConfEntry *entry = entries; entry; entry = entry->next)
-    {
-        if (notice)
-            fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
-
-        for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
-            fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
-    }
-}
-
-
-static inline void
-apply_conf (const FacronConfEntry *entries)
-{
-    walk_conf (ADD, entries);
-}
-
-static inline void
-unapply_conf (const FacronConfEntry *entries)
-{
-    walk_conf (REMOVE, entries);
-}
-
-static inline void
-reapply_conf (void)
-{
-    FacronConfEntry *old_entries = facron_conf_reload (_conf);
-
-    unapply_conf (old_entries);
-    apply_conf (facron_conf_get_entries (_conf));
-    facron_conf_entries_free (old_entries);
-}
-
 static inline void
 cleanup (void)
 {
-    unapply_conf (facron_conf_get_entries (_conf));
-    facron_conf_free (_conf);
+    facron_conf_free (_conf, fanotify_fd);
     close (fanotify_fd);
 }
 
@@ -112,7 +56,7 @@ signal_handler (int signum)
     switch (signum)
     {
     case SIGUSR1:
-        reapply_conf ();
+        facron_conf_reapply (_conf, fanotify_fd);
         break;
     case SIGTERM:
         status = EXIT_SUCCESS;
@@ -303,7 +247,7 @@ main (int argc, char *argv[])
     }
 
     _conf = facron_conf_new (conf_file);
-    apply_conf (facron_conf_get_entries (_conf));
+    facron_conf_apply (facron_conf_get_entries (_conf), fanotify_fd);
 
     char buf[4096];
     size_t len;

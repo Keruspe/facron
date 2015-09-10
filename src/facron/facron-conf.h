@@ -26,11 +26,13 @@
 
 typedef struct FacronConf FacronConf;
 
-FacronConfEntry *facron_conf_reload (FacronConf *conf);
+void facron_conf_apply (const FacronConfEntry *entries, int fanotify_fd);
+void facron_conf_unapply (const FacronConfEntry *entries, int fanotify_fd);
+void facron_conf_reapply (FacronConf *conf, int fanotify_fd);
 
 const FacronConfEntry *facron_conf_get_entries (FacronConf *conf);
 
-void facron_conf_free (FacronConf *conf);
+void facron_conf_free (FacronConf *conf, int fanotify_fd);
 
 FacronConf *facron_conf_new (const char *filename);
 

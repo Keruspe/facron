@@ -20,12 +20,21 @@
 #include "facron-conf.h"
 #include "facron-parser.h"
 
+#include <fcntl.h>
+#include <sys/fanotify.h>
+
 struct FacronConf
 {
     FacronParser *parser;
     FacronConfEntry *entries;
     const char *filename;
 };
+
+typedef enum
+{
+    ADD,
+    REMOVE
+} FacronAction;
 
 static bool
 facron_conf_load (FacronConf *conf)
@@ -40,7 +49,7 @@ facron_conf_load (FacronConf *conf)
     return true;
 }
 
-FacronConfEntry *
+static FacronConfEntry *
 facron_conf_reload (FacronConf *conf)
 {
     FacronConfEntry *entries = conf->entries;
@@ -56,6 +65,54 @@ facron_conf_reload (FacronConf *conf)
     }
 }
 
+static void
+facron_conf_walk (FacronAction action, const FacronConfEntry *entries, int fanotify_fd)
+{
+    int flag;
+    bool notice = false;
+
+    switch (action) {
+    case ADD:
+        flag = FAN_MARK_ADD;
+        notice = true;
+        break;
+    default:
+        flag = FAN_MARK_REMOVE;
+        break;
+    }
+
+    for (const FacronConfEntry *entry = entries; entry; entry = entry->next)
+    {
+        if (notice)
+            fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
+
+        for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
+            fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
+    }
+}
+
+void
+facron_conf_apply (const FacronConfEntry *entries, int fanotify_fd)
+{
+    facron_conf_walk (ADD, entries, fanotify_fd);
+}
+
+void
+facron_conf_unapply (const FacronConfEntry *entries, int fanotify_fd)
+{
+    facron_conf_walk (REMOVE, entries, fanotify_fd);
+}
+
+void
+facron_conf_reapply (FacronConf *conf, int fanotify_fd)
+{
+    FacronConfEntry *old_entries = facron_conf_reload (conf);
+
+    facron_conf_unapply (old_entries, fanotify_fd);
+    facron_conf_apply (conf->entries, fanotify_fd);
+    facron_conf_entries_free (old_entries);
+}
+
 const FacronConfEntry *
 facron_conf_get_entries (FacronConf *conf)
 {
@@ -63,8 +120,9 @@ facron_conf_get_entries (FacronConf *conf)
 }
 
 void
-facron_conf_free (FacronConf *conf)
+facron_conf_free (FacronConf *conf, int fanotify_fd)
 {
+    facron_conf_unapply (conf->entries, fanotify_fd);
     if (conf->entries)
         facron_conf_entries_free (conf->entries);
     facron_parser_free (conf->parser);
