@@ -21,18 +21,11 @@
 
 #include <fcntl.h>
 #include <getopt.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define basename
-#include <string.h>
-#undef basename
-#include <unistd.h>
 
-#include <sys/fanotify.h>
 #include <sys/wait.h>
 
-#include <linux/fanotify.h>
 #include <linux/limits.h>
 
 static int fanotify_fd;
@@ -156,8 +149,7 @@ main (int   argc,
                 goto next;
             path[path_len] = '\0';
 
-            for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = facron_conf_entry_get_next (entry))
-                facron_conf_entry_handle (entry, path, path_len, metadata);
+            facron_conf_handle (_conf, path, path_len, metadata);
 
 next:
             close (metadata->fd);

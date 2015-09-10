@@ -26,7 +26,6 @@
 #include <string.h>
 #undef basename
 
-#include <sys/fanotify.h>
 #include <sys/wait.h>
 
 struct FacronConfEntry
@@ -184,7 +183,7 @@ exec_command (char       *command[MAX_CMD_LEN],
     else
     {
         if (fork ())
-            exit (EXIT_SUCCESS);
+            _exit (EXIT_SUCCESS);
         else
             execv (command[0], command);
     }

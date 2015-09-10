@@ -20,8 +20,7 @@
 #ifndef __FACRON_CONF_PARSER_H__
 #define __FACRON_CONF_PARSER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct FacronParser FacronParser;
 

@@ -20,7 +20,8 @@
 #include "facron-conf.h"
 #include "facron-parser.h"
 
-#include <sys/fanotify.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct FacronConf
 {
@@ -109,10 +110,14 @@ facron_conf_reapply (FacronConf *conf,
     facron_conf_entries_free (old_entries);
 }
 
-const FacronConfEntry *
-facron_conf_get_entries (FacronConf *conf)
+void
+facron_conf_handle(FacronConf     *conf,
+                   const char     *path,
+                   size_t          path_len,
+                   FacronMetadata *metadata)
 {
-    return conf->entries;
+    for (const FacronConfEntry *entry = conf->entries; entry; entry = facron_conf_entry_get_next (entry))
+        facron_conf_entry_handle (entry, path, path_len, metadata);
 }
 
 void

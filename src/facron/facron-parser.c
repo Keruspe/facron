@@ -21,8 +21,8 @@
 #include "facron-lexer.h"
 #include "facron-parser.h"
 
-#include <string.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct FacronParser
 {

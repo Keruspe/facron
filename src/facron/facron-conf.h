@@ -22,8 +22,6 @@
 
 #include "facron-conf-entry.h"
 
-#include <stdbool.h>
-
 typedef struct FacronConf FacronConf;
 
 void facron_conf_apply   (FacronConf *conf,
@@ -31,7 +29,10 @@ void facron_conf_apply   (FacronConf *conf,
 void facron_conf_reapply (FacronConf *conf,
                           int         fanotify_fd);
 
-const FacronConfEntry *facron_conf_get_entries (FacronConf *conf);
+void facron_conf_handle(FacronConf     *conf,
+                        const char     *path,
+                        size_t          path_len,
+                        FacronMetadata *metadata);
 
 void facron_conf_free (FacronConf *conf,
                        int         fanotify_fd);
