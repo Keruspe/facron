@@ -20,7 +20,6 @@
 #include "facron-conf.h"
 #include "facron-parser.h"
 
-#include <fcntl.h>
 #include <sys/fanotify.h>
 
 struct FacronConf
@@ -81,14 +80,8 @@ facron_conf_walk (FacronAction           action,
         break;
     }
 
-    for (const FacronConfEntry *entry = entries; entry; entry = entry->next)
-    {
-        if (notice)
-            fprintf (stderr, "Notice: tracking \"%s\"\n", entry->path);
-
-        for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
-            fanotify_mark (fanotify_fd, flag, entry->mask[i], AT_FDCWD, entry->path);
-    }
+    for (const FacronConfEntry *entry = entries; entry; entry = facron_conf_entry_get_next (entry))
+        facron_conf_entry_apply (entry, fanotify_fd, flag, notice);
 }
 
 void

@@ -17,7 +17,6 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include "facron-conf.h"
 
 #include <fcntl.h>
@@ -38,8 +37,6 @@
 
 static int fanotify_fd;
 static FacronConf *_conf = NULL;
-
-typedef struct fanotify_event_metadata FacronMetadata;
 
 static inline void
 cleanup (void)
@@ -72,124 +69,6 @@ usage (char *callee)
 {
     fprintf (stderr, "USAGE: %s [--conf|-c config_file] [--daemon|-d]\n", callee);
     exit (EXIT_FAILURE);
-}
-
-static inline char *
-print_pid (pid_t pid)
-{
-    char *tmp = NULL;
-    if (asprintf (&tmp, "%d", pid) < 1)
-        return strdup ("0");
-    return tmp;
-}
-
-static inline char *
-print_number (unsigned int n)
-{
-    char *tmp = NULL;
-    if (asprintf (&tmp, "%u", n) < 1)
-        return strdup ("0");
-    return tmp;
-}
-
-typedef struct CommandBackup CommandBackup;
-struct CommandBackup
-{
-    int            index;
-    char          *field;
-    CommandBackup *next;
-};
-
-static inline char *
-basename (const char *filename)
-{
-    char *bn = strrchr (filename, '/');
-    return strdup (bn ? bn + 1 : filename);
-}
-
-static inline char *
-substr (const char *str,
-        size_t      len)
-{
-    return (char *) memcpy (calloc (len + 1, sizeof (char)), str, len);
-}
-
-static inline char *
-dirname (const char *filename)
-{
-    char *c = strrchr (filename, '/');
-    if (!c)
-        return strdup (".");
-
-    if (c[1] == '\0')
-    {
-        while (c != filename && c[-1] == '/')
-            --c;
-        c = memrchr (filename, '/', c - filename);
-    }
-
-    while (c != filename && c[-1] == '/')
-        --c;
-    return (c != filename) ? substr (filename, c - filename) :
-                             (filename[1] == '/') ? strdup ("//") :
-                                                    strdup ("/");
-}
-
-static void
-exec_command (char       *command[MAX_CMD_LEN],
-              const char *path,
-              pid_t       pid)
-{
-    static unsigned int count = 0;
-
-    CommandBackup *backup = NULL;
-    for (unsigned int i = 0; i < MAX_CMD_LEN && command[i]; ++i)
-    {
-        char *field = command[i];
-        char *subst = NULL;
-
-        if (!strcmp ("$$", field))
-            subst = strdup (path);
-        else if (!strcmp ("$@", field))
-            subst = dirname (path);
-        else if (!strcmp ("$#", field))
-            subst = basename (path);
-	else if (!strcmp ("$*", field))
-            subst = print_pid (pid);
-        else if (!strcmp ("$+", field))
-            subst = print_number (++count);
-        else if (!strcmp ("$-", field))
-            subst = print_number (--count);
-        else if (!strcmp ("$=", field))
-            subst = print_number (count);
-
-        if (subst)
-        {
-            CommandBackup *b = (CommandBackup *) malloc (sizeof (CommandBackup));
-            b->index = i;
-            b->field = field;
-            b->next = backup;
-            backup = b;
-            command[i] = subst;
-        }
-    }
-
-    pid_t p = fork ();
-    if (p)
-        waitpid (p, NULL, 0);
-    else
-    {
-        if (fork ())
-            exit (EXIT_SUCCESS);
-        else
-            execv (command[0], command);
-    }
-
-    for (CommandBackup *next; backup != NULL; next = backup->next, free (backup), backup = next)
-    {
-        free (command[backup->index]);
-        command[backup->index] = backup->field;
-    }
 }
 
 int
@@ -277,30 +156,8 @@ main (int   argc,
                 goto next;
             path[path_len] = '\0';
 
-            for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = entry->next)
-            {
-                if (!strcmp (entry->path, path))
-                {
-                    for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
-                    {
-                        if ((entry->mask[i] & metadata->mask) == entry->mask[i])
-                            exec_command ((char **) entry->command, path, metadata->pid);
-                    }
-                }
-                else
-                {
-                    size_t plen = strlen (entry->path);
-                    for (int i = 0; i < MAX_MASK_LEN && entry->mask[i]; ++i)
-                    {
-                        if ((entry->mask[i] & FAN_EVENT_ON_CHILD) &&
-                            (size_t)path_len >= plen &&
-                            (entry->path[plen - 1] == '/' || path[plen] == '/') &&
-                            !memcmp (entry->path, path, plen) &&
-                            (entry->mask[i] & metadata->mask) == (entry->mask[i] & ~FAN_EVENT_ON_CHILD))
-                                exec_command ((char **) entry->command, path, metadata->pid);
-                    }
-                }
-            }
+            for (const FacronConfEntry *entry = facron_conf_get_entries (_conf); entry; entry = facron_conf_entry_get_next (entry))
+                facron_conf_entry_handle (entry, path, path_len, metadata);
 
 next:
             close (metadata->fd);

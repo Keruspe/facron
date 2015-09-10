@@ -17,7 +17,6 @@
  *      along with facron.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include "facron-conf-entry.h"
 #include "facron-lexer.h"
 #include "facron-parser.h"
@@ -70,40 +69,37 @@ facron_parser_parse_entry (FacronParser    *parser,
         case R_ERROR:
             goto fail;
         case R_COMMA:
-            entry->mask[n++] |= mask;
+            facron_conf_entry_apply_mask (entry, n++, mask);
             break;
         case R_PIPE:
-            entry->mask[n] |= mask;
+            facron_conf_entry_apply_mask (entry, n, mask);
             break;
         default:
             break;
         }
     }
 
-    entry->mask[n] |= mask;
+    facron_conf_entry_apply_mask (entry, n, mask);
 
-    if (!n && !entry->mask[n])
+    if (!n && !facron_conf_entry_validate (entry))
     {
         fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
         goto fail;
     }
 
-    n = 0;
     facron_lexer_skip_spaces (parser->lexer);
 
-    while (!facron_lexer_end_of_line (parser->lexer) && n < 511)
+    for (n = 0; !facron_lexer_end_of_line (parser->lexer) && n < 511; ++n)
     {
-        entry->command[n++] = facron_lexer_read_string (parser->lexer);
+        facron_conf_entry_add_command (entry, facron_lexer_read_string (parser->lexer));
         facron_lexer_skip_spaces (parser->lexer);
     }
 
     if (!n)
     {
-        fprintf (stderr, "Error: no command line specified for \"%s\"\n", entry->path);
+        fprintf (stderr, "Error: no command line specified\n");
         goto fail;
     }
-
-    entry->command[n] = NULL;
 
     return entry;
 

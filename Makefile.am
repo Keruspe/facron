@@ -22,6 +22,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 	$(NULL)
 
 AM_CFLAGS = \
+	-include config.h \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \
 	$(NULL)
 

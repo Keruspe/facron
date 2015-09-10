@@ -21,19 +21,34 @@
 #define __FACRON_CONF_ENTRY_H__
 
 #include <stdbool.h>
+#include <unistd.h>
 
 #define MAX_CMD_LEN 512
 #define MAX_MASK_LEN 512
 
 typedef struct FacronConfEntry FacronConfEntry;
+typedef struct fanotify_event_metadata FacronMetadata;
 
-struct FacronConfEntry
-{
-    FacronConfEntry   *next;
-    char              *path;
-    unsigned long long mask[MAX_MASK_LEN];
-    char              *command[MAX_CMD_LEN];
-};
+const FacronConfEntry *facron_conf_entry_get_next (const FacronConfEntry *entry);
+
+void facron_conf_entry_apply_mask (FacronConfEntry   *entry,
+                                   int                n_mask,
+                                   unsigned long long mask);
+
+void facron_conf_entry_add_command (FacronConfEntry *entry,
+                                    char            *command);
+
+bool facron_conf_entry_validate (const FacronConfEntry *entry);
+
+void facron_conf_entry_apply (const FacronConfEntry *entry,
+                              int                    fanotify_fd,
+                              int                    flag,
+                              bool                   notice);
+
+void facron_conf_entry_handle (const FacronConfEntry *entry,
+                               const char            *path,
+                               size_t                 path_len,
+                               const FacronMetadata  *metadata);
 
 void facron_conf_entry_free (FacronConfEntry *entry);
 void facron_conf_entries_free (FacronConfEntry *entry);
