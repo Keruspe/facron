@@ -16,13 +16,13 @@ scan_build_run() {
 }
 
 scan_build() {
+    clean
     scan_build_run ./configure "${@}"
     scan_build_run make
 }
 
 static_analysis() {
     coverity-submit
-    clean
     scan_build "${@}"
 }
 
@@ -31,6 +31,7 @@ full() {
     clean
     ./configure "${@}"
     make
+    make distcheck
 }
 
 run_action() {
