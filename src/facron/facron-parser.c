@@ -53,6 +53,7 @@ facron_parser_parse_entry (FacronParser    *parser,
     if (facron_lexer_end_of_line (parser->lexer))
     {
         fprintf (stderr, "Error: no Fanotify mask has been specified.\n");
+        free (path);
         goto fail_early;
     }
 
