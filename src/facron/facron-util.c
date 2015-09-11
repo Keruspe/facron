@@ -95,6 +95,9 @@ facron_exec_command (char       *command[MAX_CMD_LEN],
 {
     static unsigned int count = 0;
 
+    if (!command || !*command)
+        return;
+
     CommandBackup *backup = NULL;
     for (unsigned int i = 0; i < MAX_CMD_LEN && command[i]; ++i)
     {
