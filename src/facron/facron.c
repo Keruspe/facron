@@ -50,6 +50,7 @@ signal_handler (int signum)
         break;
     case SIGTERM:
         status = EXIT_SUCCESS;
+        // fall through
     default:
         fprintf (stderr, "Signal %d received, exiting.\n", signum);
         cleanup ();
