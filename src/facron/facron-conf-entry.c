@@ -123,11 +123,12 @@ facron_conf_entry_free (FacronConfEntry *entry)
 void
 facron_conf_entries_free (FacronConfEntry *entry)
 {
-    if (!entry)
-        return;
-
-    for (FacronConfEntry *next = entry->next; entry; entry = next, next = entry->next)
+    while (entry)
+    {
+        FacronConfEntry *next = entry->next;
         facron_conf_entry_free (entry);
+        entry = next;
+    }
 }
 
 FacronConfEntry *
