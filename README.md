@@ -8,7 +8,7 @@ facron is a new generation filesystem cron
 See <http://www.imagination-land.org/posts/2012-12-04-facron-fanotify-cron-system.html> and
 <http://www.imagination-land.org/posts/2012-12-07-facron-released.html> for more details.
 
-Latest release is [1.0](http://www.imagination-land.org/files/facron/facron-1.0.tar.xz)
+Latest release is [1.1](http://www.imagination-land.org/files/facron/facron-1.1.tar.xz)
 
 To build facron:
 
